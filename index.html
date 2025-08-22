@@ -27,7 +27,7 @@
   @media (max-width:900px){ .container{ grid-template-columns:1fr; padding:12px; } }
 
   .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06); }
-  .plant-card{ padding:18px; position:relative; overflow:hidden; min-height:360px; display:flex; align-items:center; justify-content:center;}
+  .plant-card{ padding:18px; position:relative; overflow:hidden; min-height:380px; display:flex; align-items:center; justify-content:center;}
   .quiz-card{ padding:20px; }
 
   .progress-wrap{margin-top:10px}
@@ -40,8 +40,7 @@
     background:#f8fafc; color:var(--text); cursor:pointer; font-weight:700;
     transition:transform .04s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease;
   }
-  .btn:hover{ background:#f1f5f9; }
-  .btn:active{ transform:translateY(1px); }
+  .btn:hover{ background:#f1f5f9; } .btn:active{ transform:translateY(1px); }
   .btn[disabled]{ opacity:.55; cursor:not-allowed; }
 
   .options{ display:grid; gap:10px; margin-top:14px;}
@@ -60,10 +59,28 @@
   .tag{ font-size:12px; padding:3px 8px; border-radius:999px; background:#e8f7ee; border:1px solid #b9f0cf; color:#065f46; }
   .small{ color:var(--muted); font-size:12px; }
 
-  .plant-wrap{ width:min(500px,100%); aspect-ratio: 1 / 1; }
+  .plant-wrap{ width:min(540px,100%); aspect-ratio: 1 / 1; }
   svg{ width:100%; height:100%; display:block; }
-  .soil{ fill:#a37656; } .seed{ fill:#8b5a3c; } .stem{ fill:#2f855a; }
-  .leaf{ fill:#34d399; } .trunk{ fill:#8b6b46; } .canopy{ fill:#22c55e; }
+  .soil{ fill:#a37656; }
+  .seed{ fill:#8b5a3c; }
+  .root{ stroke:#7a4b30; stroke-width:1.6; fill:none; stroke-linecap:round; }
+  .stem{ fill:#2f855a; }
+  .trunk{ fill:#8b6b46; }
+  .branch{ stroke:#8b6b46; stroke-width:1.8; fill:none; stroke-linecap:round; }
+  .leaf{ fill:#34d399; }
+  .canopy{ fill:#22c55e; }
+
+  /* Animaciones */
+  .stage { opacity:0; transform: translateY(4px) scale(.985); }
+  .stage.active { animation: popIn .6s ease forwards; }
+  @keyframes popIn { to { opacity:1; transform: translateY(0) scale(1);} }
+  .stage .root { stroke-dasharray: 40; stroke-dashoffset: 40; }
+  .stage.active .root { animation: draw 900ms ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .stage .leaf, .stage .canopy { opacity:0; }
+  .stage.active .leaf { animation: leafIn .55s ease forwards .15s; }
+  .stage.active .canopy { animation: leafIn .6s ease forwards .1s; }
+  @keyframes leafIn { from {opacity:0; transform:scale(.9);} to {opacity:1; transform:scale(1);} }
 
   .drop{
     position:absolute; top:-20px; left:50%; transform:translateX(-50%);
@@ -88,7 +105,10 @@
 <body>
   <header>
     <h1>🌱 Semillas y Árbol</h1>
-    <div class="subtitle">40 preguntas (20 texto➜cita y 20 cita➜texto). 2 opciones por pregunta.</div>
+    <div class="subtitle">
+      40 preguntas (20 texto➜cita y 20 cita➜texto). 2 opciones por pregunta.
+      <span id="versionTag" class="tag" style="margin-left:8px">Versión: cargando…</span>
+    </div>
   </header>
 
   <main class="container">
@@ -104,34 +124,103 @@
           </defs>
           <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
           <rect x="0" y="70" width="100" height="30" class="soil"/>
-          <!-- Etapas -->
-          <g id="stage-0"><ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/></g>
-          <g id="stage-1" style="display:none">
-            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/><path d="M50 74 L50 66" class="stem"/>
+
+          <!-- 11 etapas (0..10): semilla → raíces → tronco → ramas → hojas → frondoso -->
+          <g id="stage-0" class="stage">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
           </g>
-          <g id="stage-2" style="display:none">
-            <path d="M50 74 L50 62" class="stem"/>
-            <ellipse cx="45" cy="63" rx="5" ry="3" class="leaf"/>
-            <ellipse cx="55" cy="63" rx="5" ry="3" class="leaf"/>
+
+          <g id="stage-1" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 86" class="root"/>
           </g>
-          <g id="stage-3" style="display:none">
-            <path d="M50 74 L50 56" class="stem"/>
-            <ellipse cx="42" cy="60" rx="6" ry="3.5" class="leaf"/>
-            <ellipse cx="58" cy="58" rx="6" ry="3.5" class="leaf"/>
-            <ellipse cx="46" cy="54" rx="5" ry="3" class="leaf"/>
+
+          <g id="stage-2" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 85 C46 87 44 89 42 92" class="root"/>
+            <path d="M50 84 C54 86 56 88 58 91" class="root"/>
           </g>
-          <g id="stage-4" style="display:none">
-            <rect x="48" y="50" width="4" height="24" class="trunk"/>
-            <circle cx="50" cy="44" r="12" class="canopy"/>
+
+          <g id="stage-3" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 84 C46 86 44 89 42 92" class="root"/>
+            <path d="M50 83 C54 85 56 88 60 92" class="root"/>
+            <path d="M50 74 L50 66" class="stem"/>
           </g>
-          <g id="stage-5" style="display:none">
-            <rect x="47" y="45" width="6" height="29" class="trunk"/>
-            <circle cx="50" cy="36" r="16" class="canopy"/>
-            <circle cx="40" cy="44" r="10" class="canopy"/>
-            <circle cx="60" cy="46" r="11" class="canopy"/>
+
+          <g id="stage-4" class="stage" style="display:none">
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 83 C46 86 44 89 42 92" class="root"/>
+            <path d="M50 82 C54 85 56 88 60 92" class="root"/>
+            <rect x="49" y="64" width="2" height="10" class="trunk"/>
+          </g>
+
+          <g id="stage-5" class="stage" style="display:none">
+            <path d="M50 75 L50 92" class="root"/>
+            <path d="M50 86 C45 88 43 90 40 94" class="root"/>
+            <path d="M50 85 C55 87 58 90 60 94" class="root"/>
+            <rect x="48.6" y="60" width="2.8" height="14" class="trunk"/>
+            <path d="M50 62 C46 60 43 59 40 58" class="branch"/>
+            <path d="M50 62 C54 60 57 58.5 60 58" class="branch"/>
+          </g>
+
+          <g id="stage-6" class="stage" style="display:none">
+            <path d="M50 75 L50 92" class="root"/>
+            <path d="M50 86 C45 88 43 90 40 94" class="root"/>
+            <path d="M50 85 C55 87 58 90 60 94" class="root"/>
+            <rect x="48.5" y="56" width="3" height="18" class="trunk"/>
+            <path d="M50 60 C43 58 39 56 36 54" class="branch"/>
+            <path d="M50 60 C57 58 61 56 64 54" class="branch"/>
+            <path d="M50 58 C46 55 44 53 42 51" class="branch"/>
+            <path d="M50 58 C54 55 56 53 58 51" class="branch"/>
+          </g>
+
+          <g id="stage-7" class="stage" style="display:none">
+            <rect x="48.5" y="54" width="3.2" height="20" class="trunk"/>
+            <path d="M50 60 C43 58 39 56 36 54" class="branch"/>
+            <path d="M50 60 C57 58 61 56 64 54" class="branch"/>
+            <path d="M50 58 C46 55 44 53 42 51" class="branch"/>
+            <path d="M50 58 C54 55 56 53 58 51" class="branch"/>
+            <circle cx="38" cy="54" r="2.5" class="leaf"/>
+            <circle cx="62" cy="54" r="2.5" class="leaf"/>
+            <circle cx="42" cy="50.5" r="2.3" class="leaf"/>
+            <circle cx="58" cy="50.5" r="2.3" class="leaf"/>
+          </g>
+
+          <g id="stage-8" class="stage" style="display:none">
+            <rect x="48.3" y="52" width="3.4" height="22" class="trunk"/>
+            <path d="M50 60 C42 57 37 55 34 53" class="branch"/>
+            <path d="M50 60 C58 57 63 55 66 53" class="branch"/>
+            <path d="M50 58 C45 54 42 52 40 50" class="branch"/>
+            <path d="M50 58 C55 54 58 52 60 50" class="branch"/>
+            <circle cx="36" cy="54" r="3" class="leaf"/>
+            <circle cx="64" cy="54" r="3" class="leaf"/>
+            <circle cx="40" cy="49.5" r="2.7" class="leaf"/>
+            <circle cx="60" cy="49.5" r="2.7" class="leaf"/>
+            <circle cx="46" cy="46" r="2.4" class="leaf"/>
+            <circle cx="54" cy="46" r="2.4" class="leaf"/>
+          </g>
+
+          <g id="stage-9" class="stage" style="display:none">
+            <rect x="47.8" y="48" width="4.4" height="26" class="trunk"/>
+            <circle cx="50" cy="40" r="12" class="canopy"/>
+            <circle cx="40" cy="46" r="8" class="canopy"/>
+            <circle cx="60" cy="46" r="8" class="canopy"/>
+          </g>
+
+          <g id="stage-10" class="stage" style="display:none">
+            <rect x="47.4" y="45" width="5.2" height="29" class="trunk"/>
+            <circle cx="50" cy="36" r="15" class="canopy"/>
+            <circle cx="39" cy="44" r="11" class="canopy"/>
+            <circle cx="61" cy="45" r="11" class="canopy"/>
+            <circle cx="46" cy="51" r="8" class="canopy"/>
+            <circle cx="54" cy="51" r="8" class="canopy"/>
           </g>
         </svg>
       </div>
+
       <div class="progress-wrap" style="position:absolute; left:18px; right:18px; bottom:16px;">
         <div class="meta">
           <span class="tag" id="stageLabel">Etapa: semilla</span>
@@ -150,7 +239,7 @@
         <span class="small">Pregunta <span id="qnum">1</span> de <span id="qtot">1</span></span>
       </div>
 
-      <div class="verse" id="verseText">Cargando...</div>
+      <div class="verse" id="verseText">Cargando…</div>
       <div class="options" id="options"></div>
 
       <div style="display:flex; gap:10px; margin-top:14px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
@@ -164,7 +253,6 @@
       <div class="small" style="margin-top:10px; opacity:.9">
         <strong>Modo:</strong> 20 preguntas piden escoger la <em>cita</em>; 20 piden escoger el <em>texto</em>. 2 opciones por pregunta.
         Los fallos no restan crecimiento; la racha se reinicia al fallar/mostrar/saltar.
-        <br/>Textos: <em>Reina-Valera Antigua (1909) — Dominio público.</em>
       </div>
     </section>
   </main>
@@ -172,13 +260,24 @@
   <div class="footer">© Semillas y Árbol • Hecho con cariño 🌿</div>
 
 <script>
-/* ===== Utiles ===== */
+/* ============================================================
+   CÓMO USAR NTV
+   - Crea un archivo "versos_ntv.json" junto a este index.html
+   - Sirve la carpeta con un servidor (p.ej., VS Code Live Server)
+   - Formato JSON: lista de objetos { c: "Libro X:Y", t: "texto NTV", m:"tema" }
+   - Ejemplo:
+   [
+     {"c":"Mateo 13:31","t":"(texto NTV aquí)", "m":"semillas"},
+     ...
+   ]
+   ============================================================ */
+
+/* === Utiles === */
 const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
-/* ===== Banco de versículos ===== */
-/* RVA 1909 (dominio público) */
-const BANK = [
+/* === Banco público (RVA 1909) para respaldo inmediato === */
+const RVA_BANK = [
   {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
   {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
   {c:"Marcos 4:26",t:"Así es el reino de Dios, como cuando un hombre echa semilla en la tierra.",m:"semillas"},
@@ -221,7 +320,25 @@ const BANK = [
   {c:"Mateo 5:6",t:"Bienaventurados los que tienen hambre y sed de justicia, porque ellos serán hartos.",m:"alimentación"}
 ];
 
-/* ===== Preguntas (20 Texto→Cita + 20 Cita→Texto, 2 opciones) ===== */
+/* === Carga preferente NTV (si hay archivo JSON), si no: RVA === */
+let DATA_VERSION = "cargando…";
+let BANK = [];
+async function loadBank(){
+  try{
+    const res = await fetch('./versos_ntv.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('No JSON NTV');
+    const items = await res.json();
+    // Validación mínima
+    if(!Array.isArray(items) || items.length < 40) throw new Error('JSON incompleto');
+    BANK = items;
+    DATA_VERSION = "NTV (archivo local)";
+  }catch(e){
+    BANK = RVA_BANK;
+    DATA_VERSION = "RVA 1909 (respaldo)";
+  }
+}
+
+/* === Crear preguntas (20 Texto→Cita + 20 Cita→Texto, 2 opciones) === */
 function makeQuestions(){
   const shuffled = shuffle(BANK);
   const partA = shuffled.slice(0,20);   // Texto -> Cita
@@ -240,26 +357,27 @@ function makeQuestions(){
   return shuffle(qA.concat(qB));
 }
 
-/* ===== Estado, refs, audio y racha ===== */
+/* === Estado, refs, audio, racha y resumen === */
 let QUESTIONS, idx, correct, total, answeredThisQuestion;
 let streak = 0, bestStreak = 0;
-let misses = []; // {type,theme,prompt,answer,chosen,reason:'wrong'|'revealed'|'skipped'}
+let misses = []; // {type,theme,prompt,answer,chosen,reason}
 
-const verseEl = document.getElementById('verseText');
+const verseEl   = document.getElementById('verseText');
 const optionsEl = document.getElementById('options');
-const qnumEl = document.getElementById('qnum');
-const qtotEl = document.getElementById('qtot');
-const themeTag = document.getElementById('themeTag');
-const feedbackEl = document.getElementById('feedback');
-const skipBtn = document.getElementById('skipBtn');
+const qnumEl    = document.getElementById('qnum');
+const qtotEl    = document.getElementById('qtot');
+const themeTag  = document.getElementById('themeTag');
+const feedbackEl= document.getElementById('feedback');
+const skipBtn   = document.getElementById('skipBtn');
 const revealBtn = document.getElementById('revealBtn');
-const scoreEl = document.getElementById('score');
-const totalEl = document.getElementById('total');
-const barEl = document.getElementById('bar');
-const stageLabel = document.getElementById('stageLabel');
-const dropsEl = document.getElementById('drops');
-const streakEl = document.getElementById('streak');
-const bestEl = document.getElementById('best');
+const scoreEl   = document.getElementById('score');
+const totalEl   = document.getElementById('total');
+const barEl     = document.getElementById('bar');
+const stageLabel= document.getElementById('stageLabel');
+const dropsEl   = document.getElementById('drops');
+const streakEl  = document.getElementById('streak');
+const bestEl    = document.getElementById('best');
+const versionTag= document.getElementById('versionTag');
 
 /* ==== Sonido de acierto (WebAudio) ==== */
 let audioCtx = null;
@@ -282,23 +400,29 @@ function playDing(){
   }catch(e){}
 }
 
-/* ===== Planta: crecimiento visible desde el primer acierto ===== */
-const stageThresholds = [1, 6, 14, 24, 36]; // define etapas 1..5 (0 aciertos = etapa 0)
+/* === Árbol: 11 etapas y umbrales === */
+const FINE_STAGES = 11; // 0..10
+const fineThresholds = [1,4,7,10,14,20,26,32,36,40];
+const stageNames = [
+  "semilla","raíces","más raíces","brote",
+  "tronco","ramas","más ramas","hojas",
+  "más hojas","copa","árbol frondoso"
+];
 function stageFromCorrect(n){
-  if(n===0) return 0;
-  if(n < stageThresholds[1]) return 1;
-  if(n < stageThresholds[2]) return 2;
-  if(n < stageThresholds[3]) return 3;
-  if(n < stageThresholds[4]) return 4;
-  return 5;
+  if(n<=0) return 0;
+  for(let i=0;i<fineThresholds.length;i++){
+    if(n < fineThresholds[i]) return i+1;
+  }
+  return 10;
 }
 function setStage(stage){
-  for(let s=0; s<=5; s++){
+  for(let s=0; s<FINE_STAGES; s++){
     const g = document.getElementById(`stage-${s}`);
-    if(g) g.style.display = (s===stage)?'block':'none';
+    if(!g) continue;
+    g.style.display = (s===stage)?'block':'none';
+    g.classList.toggle('active', s===stage);
   }
-  const names = ["semilla","germinando","brotando","planta joven","árbol pequeño","árbol completo"];
-  stageLabel.textContent = "Etapa: " + names[Math.min(stage,names.length-1)];
+  stageLabel.textContent = "Etapa: " + stageNames[Math.min(stage, stageNames.length-1)];
 }
 function updatePlant(){
   setStage(stageFromCorrect(correct));
@@ -314,7 +438,7 @@ function splash(){
 }
 function updateStreakUI(){ streakEl.textContent = streak; bestEl.textContent = bestStreak; }
 
-/* ===== Render ===== */
+/* === Render === */
 function render(){
   const q = QUESTIONS[idx];
   answeredThisQuestion = false;
@@ -340,8 +464,7 @@ function render(){
         b.classList.add('correct');
         feedbackEl.innerHTML = (q.type === 'T2C') ? ("✅ ¡Correcto! "+q.answer) : "✅ ¡Correcto!";
         correct++; updatePlant(); splash();
-        streak++; if(streak>bestStreak) bestStreak=streak; updateStreakUI();
-        playDing();
+        streak++; if(streak>bestStreak) bestStreak=streak; updateStreakUI(); playDing();
       }else{
         b.classList.add('wrong');
         Array.from(optionsEl.children).find(x=>x.textContent===q.answer)?.classList.add('correct');
@@ -359,7 +482,6 @@ function render(){
 
 skipBtn.onclick = ()=>{
   if(!answeredThisQuestion){
-    // Saltada sin responder → se añade al repaso
     const q = QUESTIONS[idx];
     misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'skipped'});
     streak = 0; updateStreakUI();
@@ -377,23 +499,15 @@ revealBtn.onclick = ()=>{
   misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'revealed'});
 };
 
-/* ===== Inicio / Fin ===== */
-function initGame(){
-  QUESTIONS = makeQuestions();
-  idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
-  totalEl.textContent = total; qtotEl.textContent = total;
-  barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
-  skipBtn.textContent = "Siguiente ⏭";
-  streak = 0; bestStreak = 0; updateStreakUI();
-  render();
-}
+/* === Inicio / Fin === */
+function makeQuestionsFromBank(){ return makeQuestions(); }
 
 function endGame(){
   const final = stageFromCorrect(correct); setStage(final);
   let msg = `Has completado el juego. Aciertos: <strong>${correct}</strong> de <strong>${total}</strong>.`;
-  msg += (final<5) ? " 🌿 ¡Sigue practicando para llegar al árbol completo!" : " 🌳 ¡Árbol completo! ¡Excelente!";
+  msg += (final<10) ? " 🌿 ¡Sigue practicando para llegar al árbol frondoso!" : " 🌳 ¡Árbol muy frondoso! ¡Excelente!";
 
-  // Construir resumen
+  // Resumen
   let html = `<div>${msg}</div>`;
   html += `<hr style="margin:12px 0;border:0;border-top:1px solid var(--line)">`;
   if(misses.length){
@@ -422,7 +536,20 @@ function endGame(){
   skipBtn.disabled = true; revealBtn.disabled = true;
 }
 
-initGame();
+async function bootstrap(){
+  await loadBank();
+  versionTag.textContent = "Versión: " + DATA_VERSION;
+
+  QUESTIONS = makeQuestionsFromBank();
+  idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
+  totalEl.textContent = total; qtotEl.textContent = total;
+  barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
+  skipBtn.textContent = "Siguiente ⏭";
+  streak = 0; bestStreak = 0; updateStreakUI();
+  render();
+}
+
+bootstrap();
 </script>
 </body>
 </html>

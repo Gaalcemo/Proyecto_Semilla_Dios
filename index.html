@@ -6,49 +6,32 @@
 <title>Semillas y Árbol • Juego de Versículos</title>
 <style>
   :root{
-    /* Paleta clara */
-    --bg:#f7faf9;
-    --panel:#ffffff;
-    --card:#ffffff;
-    --muted:#4b5563;    /* texto secundario */
-    --text:#1f2937;     /* texto principal */
-    --accent:#16a34a;   /* green-600 */
-    --accent-2:#65a30d; /* lime-600 */
-    --danger:#dc2626;   /* red-600 */
-    --ring:#10b981;     /* emerald-500 */
-    --line:#e5e7eb;     /* bordes */
+    --bg:#f7faf9; --panel:#ffffff; --card:#ffffff;
+    --muted:#4b5563; --text:#1f2937;
+    --accent:#16a34a; --accent-2:#65a30d;
+    --danger:#dc2626; --ring:#10b981; --line:#e5e7eb;
   }
   *{box-sizing:border-box}
   body{
-    margin:0;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif;
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif;
     background: radial-gradient(1200px 600px at 70% -20%, #e7f7ed 0%, var(--bg) 60%);
-    color:var(--text);
-    line-height:1.5;
+    color:var(--text); line-height:1.5;
   }
   header{ padding:24px 20px 8px; text-align:center; }
   h1{ margin:0; font-weight:800; letter-spacing:.3px; font-size:clamp(22px,3vw,32px);}
   .subtitle{color:var(--muted); font-size:14px}
-
   .container{
     max-width:1100px; margin:16px auto; padding:16px;
     display:grid; gap:16px; grid-template-columns: 1.1fr 1.4fr;
   }
-  @media (max-width: 900px){ .container{ grid-template-columns:1fr; padding:12px; } }
+  @media (max-width:900px){ .container{ grid-template-columns:1fr; padding:12px; } }
 
-  .card{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:16px;
-    box-shadow:0 8px 24px rgba(0,0,0,.06);
-  }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06); }
   .plant-card{ padding:18px; position:relative; overflow:hidden; min-height:360px; display:flex; align-items:center; justify-content:center;}
   .quiz-card{ padding:20px; }
 
   .progress-wrap{margin-top:10px}
-  .progress{
-    width:100%; height:10px; background:#eef2f7; border-radius:999px; overflow:hidden; border:1px solid var(--line);
-  }
+  .progress{ width:100%; height:10px; background:#eef2f7; border-radius:999px; overflow:hidden; border:1px solid var(--line); }
   .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .5s ease;}
 
   .btn{
@@ -60,9 +43,6 @@
   .btn:hover{ background:#f1f5f9; }
   .btn:active{ transform:translateY(1px); }
   .btn[disabled]{ opacity:.55; cursor:not-allowed; }
-  .btn-primary{ background:linear-gradient(180deg,#22c55e,#16a34a); color:white; border-color:#16a34a; }
-  .btn-primary:hover{ filter:brightness(.95); }
-  .btn-danger{ background:linear-gradient(180deg,#ef4444,#dc2626); color:white; border-color:#dc2626; }
 
   .options{ display:grid; gap:10px; margin-top:14px;}
   .opt{
@@ -75,30 +55,20 @@
   .opt.wrong{ border-color: var(--danger); box-shadow:0 0 0 2px rgba(239,68,68,.2) inset;}
   .opt[disabled]{ opacity:.9; cursor:not-allowed; }
 
-  .verse{
-    font-size:clamp(16px,2.2vw,19px);
-    background:#f7fafc;
-    border:1px solid var(--line);
-    padding:14px 14px; border-radius:12px;
-  }
-  .meta{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin:8px 0 6px; }
+  .verse{ font-size:clamp(16px,2.2vw,19px); background:#f7fafc; border:1px solid var(--line); padding:14px 14px; border-radius:12px; }
+  .meta{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin:8px 0 6px; flex-wrap:wrap; }
   .tag{ font-size:12px; padding:3px 8px; border-radius:999px; background:#e8f7ee; border:1px solid #b9f0cf; color:#065f46; }
   .small{ color:var(--muted); font-size:12px; }
 
   .plant-wrap{ width:min(500px,100%); aspect-ratio: 1 / 1; }
   svg{ width:100%; height:100%; display:block; }
-  .soil{ fill:#a37656; }
-  .seed{ fill:#8b5a3c; }
-  .stem{ fill:#2f855a; }
-  .leaf{ fill:#34d399; }
-  .trunk{ fill:#8b6b46; }
-  .canopy{ fill:#22c55e; }
+  .soil{ fill:#a37656; } .seed{ fill:#8b5a3c; } .stem{ fill:#2f855a; }
+  .leaf{ fill:#34d399; } .trunk{ fill:#8b6b46; } .canopy{ fill:#22c55e; }
 
   .drop{
     position:absolute; top:-20px; left:50%; transform:translateX(-50%);
     width:14px; height:14px; border-radius:50%; background:#3b82f6;
-    filter:drop-shadow(0 6px 8px rgba(59,130,246,.35));
-    animation: fall 700ms ease-in forwards;
+    filter:drop-shadow(0 6px 8px rgba(59,130,246,.35)); animation: fall 700ms ease-in forwards;
   }
   @keyframes fall{
     0%{ opacity:.9; transform:translate(-50%, -40px) scale(.9); }
@@ -107,12 +77,18 @@
   }
 
   .footer{ text-align:center; color:var(--muted); font-size:12px; padding:14px 12px 20px; }
+
+  /* Resumen final */
+  .summary{ margin-top:12px; font-size:14px; }
+  .summary h3{ margin:8px 0 6px; font-size:16px; }
+  .summary-item{ border:1px solid var(--line); background:#fbfdff; border-radius:12px; padding:10px 12px; margin:8px 0; }
+  .pill{ font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid #e5e7eb; background:#f3f4f6; color:#374151; margin-left:6px;}
 </style>
 </head>
 <body>
   <header>
     <h1>🌱 Semillas y Árbol</h1>
-    <div class="subtitle">Responde correctamente y ayuda a la semilla a crecer hasta hacerse árbol.</div>
+    <div class="subtitle">40 preguntas (20 texto➜cita y 20 cita➜texto). 2 opciones por pregunta.</div>
   </header>
 
   <main class="container">
@@ -160,6 +136,7 @@
         <div class="meta">
           <span class="tag" id="stageLabel">Etapa: semilla</span>
           <span class="small"><span id="score">0</span>/<span id="total">0</span> correctas</span>
+          <span class="small">Racha: <strong id="streak">0</strong> • Mejor: <strong id="best">0</strong></span>
         </div>
         <div class="progress"><i id="bar"></i></div>
       </div>
@@ -181,14 +158,13 @@
           <button class="btn" id="skipBtn" title="Siguiente pregunta">Siguiente ⏭</button>
           <button class="btn" id="revealBtn" title="Mostrar la respuesta correcta">Mostrar respuesta</button>
         </div>
-        <!-- Reinicio SIEMPRE visible -->
-        <button class="btn btn-primary" id="restartBtn" title="Reiniciar y barajar de nuevo">Reiniciar 🔁</button>
       </div>
 
       <div id="feedback" class="small" style="margin-top:8px; min-height:20px;"></div>
       <div class="small" style="margin-top:10px; opacity:.9">
-        <strong>Modo:</strong> Acierta para “regar” la semilla y hacerla crecer. Los fallos no restan crecimiento.<br/>
-        Textos: <em>Reina-Valera Antigua (1909) — Dominio público.</em>
+        <strong>Modo:</strong> 20 preguntas piden escoger la <em>cita</em>; 20 piden escoger el <em>texto</em>. 2 opciones por pregunta.
+        Los fallos no restan crecimiento; la racha se reinicia al fallar/mostrar/saltar.
+        <br/>Textos: <em>Reina-Valera Antigua (1909) — Dominio público.</em>
       </div>
     </section>
   </main>
@@ -197,11 +173,11 @@
 
 <script>
 /* ===== Utiles ===== */
+const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
 /* ===== Banco de versículos ===== */
-/* Temas: "semillas", "fe", "crecimiento", "disciplina", "alimentación"  */
-/* Textos: Reina-Valera Antigua (1909), dominio público */
+/* RVA 1909 (dominio público) */
 const BANK = [
   {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
   {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
@@ -245,11 +221,29 @@ const BANK = [
   {c:"Mateo 5:6",t:"Bienaventurados los que tienen hambre y sed de justicia, porque ellos serán hartos.",m:"alimentación"}
 ];
 
-/* ===== Estado y referencias ===== */
-let QUESTIONS;        // se (re)baraja en cada inicio
-let idx, correct, total;
-const growthStages = 6; // 0..5
-let stepPerStage;
+/* ===== Preguntas (20 Texto→Cita + 20 Cita→Texto, 2 opciones) ===== */
+function makeQuestions(){
+  const shuffled = shuffle(BANK);
+  const partA = shuffled.slice(0,20);   // Texto -> Cita
+  const partB = shuffled.slice(20,40);  // Cita -> Texto
+
+  const qA = partA.map(item=>{
+    let wrong; do { wrong = pickOne(BANK).c; } while (wrong === item.c);
+    return { type:'T2C', theme:item.m, prompt:item.t, answer:item.c, options: shuffle([item.c, wrong]) };
+  });
+
+  const qB = partB.map(item=>{
+    let w; do { w = pickOne(BANK); } while (w.t === item.t);
+    return { type:'C2T', theme:item.m, prompt:item.c, answer:item.t, options: shuffle([item.t, w.t]) };
+  });
+
+  return shuffle(qA.concat(qB));
+}
+
+/* ===== Estado, refs, audio y racha ===== */
+let QUESTIONS, idx, correct, total, answeredThisQuestion;
+let streak = 0, bestStreak = 0;
+let misses = []; // {type,theme,prompt,answer,chosen,reason:'wrong'|'revealed'|'skipped'}
 
 const verseEl = document.getElementById('verseText');
 const optionsEl = document.getElementById('options');
@@ -259,25 +253,55 @@ const themeTag = document.getElementById('themeTag');
 const feedbackEl = document.getElementById('feedback');
 const skipBtn = document.getElementById('skipBtn');
 const revealBtn = document.getElementById('revealBtn');
-const restartBtn = document.getElementById('restartBtn');
 const scoreEl = document.getElementById('score');
 const totalEl = document.getElementById('total');
 const barEl = document.getElementById('bar');
 const stageLabel = document.getElementById('stageLabel');
 const dropsEl = document.getElementById('drops');
+const streakEl = document.getElementById('streak');
+const bestEl = document.getElementById('best');
 
-/* ===== Planta ===== */
+/* ==== Sonido de acierto (WebAudio) ==== */
+let audioCtx = null;
+function playDing(){
+  try{
+    if(!audioCtx || audioCtx.state === 'closed'){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = audioCtx, now = ctx.currentTime;
+    const beep = (t0, f, dur=0.18)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(f,t0);
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.2,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      o.start(t0); o.stop(t0+dur+0.02);
+    };
+    beep(now, 880); beep(now+0.2, 1175);
+  }catch(e){}
+}
+
+/* ===== Planta: crecimiento visible desde el primer acierto ===== */
+const stageThresholds = [1, 6, 14, 24, 36]; // define etapas 1..5 (0 aciertos = etapa 0)
+function stageFromCorrect(n){
+  if(n===0) return 0;
+  if(n < stageThresholds[1]) return 1;
+  if(n < stageThresholds[2]) return 2;
+  if(n < stageThresholds[3]) return 3;
+  if(n < stageThresholds[4]) return 4;
+  return 5;
+}
 function setStage(stage){
-  for(let s=0; s<growthStages; s++){
+  for(let s=0; s<=5; s++){
     const g = document.getElementById(`stage-${s}`);
     if(g) g.style.display = (s===stage)?'block':'none';
   }
   const names = ["semilla","germinando","brotando","planta joven","árbol pequeño","árbol completo"];
   stageLabel.textContent = "Etapa: " + names[Math.min(stage,names.length-1)];
 }
-function currentStage(){ return Math.min(5, Math.floor(correct / stepPerStage)); }
 function updatePlant(){
-  setStage(currentStage());
+  setStage(stageFromCorrect(correct));
   const pct = Math.min(100, Math.round((correct/total)*100));
   barEl.style.width = pct + "%";
   scoreEl.textContent = correct;
@@ -288,36 +312,42 @@ function splash(){
   dropsEl.appendChild(d);
   setTimeout(()=>{ d.remove(); }, 800);
 }
+function updateStreakUI(){ streakEl.textContent = streak; bestEl.textContent = bestStreak; }
 
 /* ===== Render ===== */
 function render(){
   const q = QUESTIONS[idx];
+  answeredThisQuestion = false;
+
   qnumEl.textContent = idx+1;
-  verseEl.textContent = q.t;
-  themeTag.textContent = "Tema: " + q.m;
+  qtotEl.textContent = total;
+  themeTag.textContent = "Tema: " + q.theme;
+
+  verseEl.innerHTML = (q.type === 'T2C') ? q.prompt : "<strong>"+q.prompt+"</strong>";
   feedbackEl.textContent = "";
   optionsEl.innerHTML = "";
 
-  // opciones: 1 correcta + 3 aleatorias
-  const others = shuffle(BANK.filter(v => v.c !== q.c)).slice(0,3).map(v=>v.c);
-  const opts = shuffle([q.c, ...others]);
-
-  opts.forEach(opt=>{
+  q.options.forEach(opt=>{
     const b = document.createElement('button');
-    b.className = 'opt';
-    b.textContent = opt;
+    b.className = 'opt'; b.textContent = opt;
     b.onclick = ()=>{
-      const already = Array.from(optionsEl.querySelectorAll('.opt')).some(x=>x.hasAttribute('disabled'));
-      if(already) return;
+      const locked = Array.from(optionsEl.querySelectorAll('.opt')).some(x=>x.hasAttribute('disabled'));
+      if(locked) return;
       Array.from(optionsEl.children).forEach(btn=>btn.setAttribute('disabled',''));
-      if(opt === q.c){
+      answeredThisQuestion = true;
+
+      if(opt === q.answer){
         b.classList.add('correct');
-        feedbackEl.innerHTML = "✅ ¡Correcto! " + q.c;
+        feedbackEl.innerHTML = (q.type === 'T2C') ? ("✅ ¡Correcto! "+q.answer) : "✅ ¡Correcto!";
         correct++; updatePlant(); splash();
+        streak++; if(streak>bestStreak) bestStreak=streak; updateStreakUI();
+        playDing();
       }else{
         b.classList.add('wrong');
-        Array.from(optionsEl.children).find(x=>x.textContent===q.c)?.classList.add('correct');
-        feedbackEl.innerHTML = "❌ No es esa. La correcta es <strong>"+q.c+"</strong>.";
+        Array.from(optionsEl.children).find(x=>x.textContent===q.answer)?.classList.add('correct');
+        feedbackEl.innerHTML = "❌ No es esa. La correcta es <strong>"+q.answer+"</strong>.";
+        streak = 0; updateStreakUI();
+        misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:opt, reason:'wrong'});
       }
       if(idx === total-1){ skipBtn.textContent = "Finalizar"; }
     };
@@ -327,39 +357,71 @@ function render(){
   skipBtn.disabled = false; revealBtn.disabled = false;
 }
 
-skipBtn.onclick = ()=>{ if(idx < total-1){ idx++; render(); } else { endGame(); } };
+skipBtn.onclick = ()=>{
+  if(!answeredThisQuestion){
+    // Saltada sin responder → se añade al repaso
+    const q = QUESTIONS[idx];
+    misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'skipped'});
+    streak = 0; updateStreakUI();
+  }
+  if(idx < total-1){ idx++; render(); } else { endGame(); }
+};
+
 revealBtn.onclick = ()=>{
   const q = QUESTIONS[idx];
   Array.from(optionsEl.children).forEach(btn=>{
-    btn.setAttribute('disabled',''); if(btn.textContent === q.c) btn.classList.add('correct');
+    btn.setAttribute('disabled',''); if(btn.textContent === q.answer) btn.classList.add('correct');
   });
-  feedbackEl.innerHTML = "ℹ️ Correcta: <strong>"+q.c+"</strong>.";
+  feedbackEl.innerHTML = "ℹ️ Correcta: <strong>"+q.answer+"</strong>.";
+  answeredThisQuestion = true; streak = 0; updateStreakUI();
+  misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'revealed'});
 };
 
-/* ===== Reinicio (baraja de nuevo) ===== */
+/* ===== Inicio / Fin ===== */
 function initGame(){
-  QUESTIONS = shuffle(BANK).slice(0, 40);
-  idx = 0; correct = 0;
-  total = QUESTIONS.length;
-  stepPerStage = Math.ceil(total / (growthStages-1));
-  qtotEl.textContent = total; totalEl.textContent = total;
+  QUESTIONS = makeQuestions();
+  idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
+  totalEl.textContent = total; qtotEl.textContent = total;
   barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
   skipBtn.textContent = "Siguiente ⏭";
+  streak = 0; bestStreak = 0; updateStreakUI();
   render();
 }
-restartBtn.onclick = ()=>{ initGame(); };
 
 function endGame(){
-  const final = currentStage();
-  setStage(final);
-  let msg = "Has completado el juego. Aciertos: <strong>"+correct+"</strong> de <strong>"+total+"</strong>.";
+  const final = stageFromCorrect(correct); setStage(final);
+  let msg = `Has completado el juego. Aciertos: <strong>${correct}</strong> de <strong>${total}</strong>.`;
   msg += (final<5) ? " 🌿 ¡Sigue practicando para llegar al árbol completo!" : " 🌳 ¡Árbol completo! ¡Excelente!";
-  verseEl.innerHTML = msg;
+
+  // Construir resumen
+  let html = `<div>${msg}</div>`;
+  html += `<hr style="margin:12px 0;border:0;border-top:1px solid var(--line)">`;
+  if(misses.length){
+    html += `<div class="summary"><h3>Resumen para repasar (${misses.length})</h3>`;
+    misses.forEach((m,i)=>{
+      const kind = (m.type==='T2C') ? "Texto → Cita" : "Cita → Texto";
+      const reason = m.reason==='wrong' ? 'fallada' : (m.reason==='revealed' ? 'mostrada' : 'saltada');
+      const promptLabel = (m.type==='T2C') ? 'Texto' : 'Cita';
+      const answerLabel = (m.type==='T2C') ? 'Cita correcta' : 'Texto correcto';
+      const chosenPart = (m.chosen!==null && m.chosen!==undefined) ? `<div><em>Tu respuesta:</em> ${m.chosen}</div>` : '';
+      html += `
+        <div class="summary-item">
+          <div><strong>${i+1}.</strong> ${kind} <span class="pill">${m.theme}</span> <span class="pill">${reason}</span></div>
+          <div><em>${promptLabel}:</em> ${m.prompt}</div>
+          <div><em>${answerLabel}:</em> ${m.answer}</div>
+          ${chosenPart}
+        </div>`;
+    });
+    html += `</div>`;
+  }else{
+    html += `<div class="summary"><h3>¡Sin errores! 🎉</h3><p>Respondiste todo correctamente.</p></div>`;
+  }
+
+  verseEl.innerHTML = html;
   optionsEl.innerHTML = ""; feedbackEl.textContent = "";
   skipBtn.disabled = true; revealBtn.disabled = true;
 }
 
-/* ===== Inicio ===== */
 initGame();
 </script>
 </body>

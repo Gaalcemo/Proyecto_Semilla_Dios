@@ -106,7 +106,7 @@
   <header>
     <h1>🌱 Semillas y Árbol</h1>
     <div class="subtitle">
-      30 pasajes (15 texto➜cita, 15 cita➜texto) + 12 preguntas de Nombres de Dios (3 opciones).
+      40 pasajes (20 texto➜cita, 20 cita➜texto) + 12 preguntas de Nombres de Dios.
       <span id="versionTag" class="tag" style="margin-left:8px">Versión: cargando…</span>
     </div>
   </header>
@@ -251,7 +251,7 @@
 
       <div id="feedback" class="small" style="margin-top:8px; min-height:20px;"></div>
       <div class="small" style="margin-top:10px; opacity:.9">
-        <strong>Modo:</strong> 15 preguntas de pasajes piden escoger la <em>cita</em>; 15 piden escoger el <em>texto</em> (2 opciones).
+        <strong>Modo:</strong> 20 preguntas piden escoger la <em>cita</em>; 20 piden escoger el <em>texto</em> (2 opciones).
         Además, 12 preguntas de <em>Nombres de Dios</em> (3 opciones).
         <br/>Textos: <em>RVR1960 (si cargas JSON con permiso) o RVA 1909 (respaldo, dominio público).</em>
       </div>
@@ -265,14 +265,15 @@
    VERSIÓN BÍBLICA
    - Preferente: "versos_rvr1960.json" (local, con permiso)
    - Respaldo: RVA 1909 (dominio público) incluída abajo
-   - Se usarán **30 pasajes** (15 texto→cita + 15 cita→texto)
+   - Se usarán **40 pasajes** (20 texto→cita + 20 cita→texto)
+   - TODO el orden se baraja en cada inicio
    ============================================================ */
 
 /* === Utiles === */
 const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
-/* === Banco público (RVA 1909) como respaldo inmediato (≥30; luego se recorta a 30) === */
+/* === Banco público (RVA 1909) como respaldo (≥40) === */
 const RVA_BANK_ALL = [
   {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
   {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
@@ -334,26 +335,26 @@ const NOMBRES_DIOS = [
 
 /* === Carga preferente RVR1960 (si hay archivo JSON), si no: RVA === */
 let DATA_VERSION = "cargando…";
-let BANK = []; // se recorta a 30
+let BANK = []; // 40 pasajes
 async function loadBank(){
   try{
     const res = await fetch('./versos_rvr1960.json', {cache:'no-store'});
     if(!res.ok) throw new Error('No JSON RVR1960');
     const items = await res.json();
-    if(!Array.isArray(items) || items.length < 30) throw new Error('JSON con menos de 30 pasajes');
-    BANK = shuffle(items).slice(0,30);
+    if(!Array.isArray(items) || items.length < 40) throw new Error('JSON con menos de 40 pasajes');
+    BANK = shuffle(items).slice(0,40); // aleatorio en cada inicio
     DATA_VERSION = "RVR1960 (archivo local)";
   }catch(e){
-    BANK = shuffle(RVA_BANK_ALL).slice(0,30);
+    BANK = shuffle(RVA_BANK_ALL).slice(0,40); // aleatorio en cada inicio
     DATA_VERSION = "RVA 1909 (respaldo)";
   }
 }
 
-/* === Crear preguntas de pasajes (15 T2C + 15 C2T, 2 opciones) === */
+/* === Crear preguntas de pasajes (20 T2C + 20 C2T, 2 opciones) === */
 function makeVerseQuestions(){
-  const shuffled = shuffle(BANK);
-  const partA = shuffled.slice(0,15);   // Texto -> Cita
-  const partB = shuffled.slice(15,30);  // Cita -> Texto
+  const shuffled = shuffle(BANK); // aleatorio cada inicio
+  const partA = shuffled.slice(0,20);   // Texto -> Cita
+  const partB = shuffled.slice(20,40);  // Cita -> Texto
 
   const qA = partA.map(item=>{
     let wrong; do { wrong = pickOne(BANK).c; } while (wrong === item.c);
@@ -370,10 +371,9 @@ function makeVerseQuestions(){
 
 /* === Crear preguntas de Nombres de Dios (12 ítems, 3 opciones) === */
 function makeNamesQuestions(){
-  const base = shuffle(NOMBRES_DIOS);
+  const base = shuffle(NOMBRES_DIOS); // aleatorio cada inicio
   const half = Math.floor(base.length/2); // 6 y 6
   const def2name = base.slice(0,half).map(item=>{
-    // opciones: 1 correcta + 2 nombres distractores
     let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.key);
     const opts = shuffle([item.key, ...pool]);
     return {
@@ -384,7 +384,6 @@ function makeNamesQuestions(){
     };
   });
   const name2def = base.slice(half).map(item=>{
-    // opciones: definiciones (1 correcta + 2 distractoras)
     let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.meaning);
     const opts = shuffle([item.meaning, ...pool]);
     return {
@@ -394,7 +393,7 @@ function makeNamesQuestions(){
       options: opts
     };
   });
-  return shuffle(def2name.concat(name2def)); // 12 total
+  return shuffle(def2name.concat(name2def));
 }
 
 /* === Estado, refs, audio, racha y resumen === */
@@ -478,7 +477,7 @@ function splash(){
   dropsEl.appendChild(d);
   setTimeout(()=>{ d.remove(); }, 800);
 }
-function updateStreakUI(){ streakEl.textContent = streak; bestStreak.textContent = bestStreak; }
+function updateStreakUI(){ streakEl.textContent = streak; bestEl.textContent = bestStreak; }
 
 /* === Render === */
 function render(){
@@ -489,13 +488,12 @@ function render(){
   qtotEl.textContent = total;
   themeTag.textContent = "Tema: " + q.theme;
 
-  // Etiqueta visual del prompt según tipo
   if(q.type === 'T2C'){        // texto -> cita
     verseEl.textContent = q.prompt;
   }else if(q.type === 'C2T'){  // cita -> texto
     verseEl.innerHTML = "<strong>"+q.prompt+"</strong>";
-  }else{                       // nombres
-    verseEl.innerHTML = q.prompt; // ya viene formateado
+  }else{                       // nombres de Dios
+    verseEl.innerHTML = q.prompt;
   }
 
   feedbackEl.textContent = "";
@@ -514,17 +512,15 @@ function render(){
       if(opt === q.answer){
         b.classList.add('correct');
         const msg = (q.type === 'T2C') ? ("✅ ¡Correcto! "+q.answer)
-                  : (q.type === 'C2T') ? "✅ ¡Correcto!"
                   : "✅ ¡Correcto!";
         feedbackEl.innerHTML = msg;
         correct++; updatePlant(); splash();
-        streak++; if(streak>bestStreak) bestStreak=streak; streakEl.textContent=streak; best.textContent=bestStreak;
-        playDing();
+        streak++; if(streak>bestStreak) bestStreak=streak; updateStreakUI(); playDing();
       }else{
         b.classList.add('wrong');
         Array.from(optionsEl.children).find(x=>x.textContent===q.answer)?.classList.add('correct');
         feedbackEl.innerHTML = "❌ No es esa. La correcta es <strong>"+q.answer+"</strong>.";
-        streak = 0; streakEl.textContent=streak;
+        streak = 0; updateStreakUI();
         misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:opt, reason:'wrong'});
       }
       if(idx === total-1){ skipBtn.textContent = "Finalizar"; }
@@ -539,7 +535,7 @@ skipBtn.onclick = ()=>{
   if(!answeredThisQuestion){
     const q = QUESTIONS[idx];
     misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'skipped'});
-    streak = 0; streakEl.textContent=streak;
+    streak = 0; updateStreakUI();
   }
   if(idx < total-1){ idx++; render(); } else { endGame(); }
 };
@@ -550,15 +546,15 @@ revealBtn.onclick = ()=>{
     btn.setAttribute('disabled',''); if(btn.textContent === q.answer) btn.classList.add('correct');
   });
   feedbackEl.innerHTML = "ℹ️ Correcta: <strong>"+q.answer+"</strong>.";
-  answeredThisQuestion = true; streak = 0; streakEl.textContent=streak;
+  answeredThisQuestion = true; streak = 0; updateStreakUI();
   misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'revealed'});
 };
 
 /* === Construcción del cuestionario completo === */
 function makeAllQuestions(){
-  const verseQs = makeVerseQuestions();     // 30 (2 opciones)
-  const namesQs = makeNamesQuestions();     // 12 (3 opciones)
-  return shuffle(verseQs.concat(namesQs));  // total 42
+  const verseQs = makeVerseQuestions(); // 40 (2 opciones)
+  const namesQs = makeNamesQuestions(); // 12 (3 opciones)
+  return shuffle(verseQs.concat(namesQs)); // orden completamente aleatorio
 }
 
 /* === Final === */
@@ -600,14 +596,14 @@ function endGame(){
 /* === Bootstrap === */
 async function bootstrap(){
   await loadBank();
-  document.getElementById('versionTag').textContent = "Versión: " + DATA_VERSION;
+  versionTag.textContent = "Versión: " + DATA_VERSION;
 
-  QUESTIONS = makeAllQuestions();
+  QUESTIONS = makeAllQuestions(); // todo aleatorio
   idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
   totalEl.textContent = total; qtotEl.textContent = total;
   barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
   skipBtn.textContent = "Siguiente ⏭";
-  streak = 0; bestStreak = 0; document.getElementById('streak').textContent=streak; document.getElementById('best').textContent=bestStreak;
+  streak = 0; bestStreak = 0; updateStreakUI();
   render();
 }
 

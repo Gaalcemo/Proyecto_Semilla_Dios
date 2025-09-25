@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Semillas y Árbol • Juego de Versículos</title>
+<title>Semillas y Árbol • Juego</title>
 <style>
   :root{
     --bg:#f7faf9; --panel:#ffffff; --card:#ffffff;
@@ -37,7 +37,7 @@
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     padding:12px 14px; border-radius:12px; border:1px solid var(--line);
-    background:#f8fafc; color:var(--text); cursor:pointer; font-weight:700;
+    background:#f8fafc; color:#1f2937; cursor:pointer; font-weight:700;
     transition:transform .04s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease;
   }
   .btn:hover{ background:#f1f5f9; } .btn:active{ transform:translateY(1px); }
@@ -106,7 +106,7 @@
   <header>
     <h1>🌱 Semillas y Árbol</h1>
     <div class="subtitle">
-      40 pasajes (20 texto➜cita, 20 cita➜texto) + 12 preguntas de Nombres de Dios.
+      Pasajes bíblicos + Nombres de Dios + ¿Dónde está cada persona?
       <span id="versionTag" class="tag" style="margin-left:8px">Versión: cargando…</span>
     </div>
   </header>
@@ -251,8 +251,7 @@
 
       <div id="feedback" class="small" style="margin-top:8px; min-height:20px;"></div>
       <div class="small" style="margin-top:10px; opacity:.9">
-        <strong>Modo:</strong> 20 preguntas piden escoger la <em>cita</em>; 20 piden escoger el <em>texto</em> (2 opciones).
-        Además, 12 preguntas de <em>Nombres de Dios</em> (3 opciones).
+        <strong>Incluye:</strong> 40 pasajes (20 texto→cita, 20 cita→texto), 12 Nombres de Dios, y “¿Dónde está [persona]?” (2 opciones).
         <br/>Textos: <em>RVR1960 (si cargas JSON con permiso) o RVA 1909 (respaldo, dominio público).</em>
       </div>
     </section>
@@ -261,19 +260,11 @@
   <div class="footer">© Semillas y Árbol • Hecho con cariño 🌿</div>
 
 <script>
-/* ============================================================
-   VERSIÓN BÍBLICA
-   - Preferente: "versos_rvr1960.json" (local, con permiso)
-   - Respaldo: RVA 1909 (dominio público) incluída abajo
-   - Se usarán **40 pasajes** (20 texto→cita + 20 cita→texto)
-   - TODO el orden se baraja en cada inicio
-   ============================================================ */
-
-/* === Utiles === */
+/* ===== Utilidades ===== */
 const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
-/* === Banco público (RVA 1909) como respaldo (≥40) === */
+/* ===== Biblia: preferente RVR1960 desde JSON, respaldo RVA 1909 (≥40) ===== */
 const RVA_BANK_ALL = [
   {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
   {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
@@ -317,7 +308,23 @@ const RVA_BANK_ALL = [
   {c:"Mateo 5:6",t:"Bienaventurados los que tienen hambre y sed de justicia, porque ellos serán hartos.",m:"alimentación"}
 ];
 
-/* === Nombres de Dios (12) === */
+let DATA_VERSION = "cargando…";
+let BANK = []; // 40 pasajes
+async function loadBank(){
+  try{
+    const res = await fetch('./versos_rvr1960.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('No JSON RVR1960');
+    const items = await res.json();
+    if(!Array.isArray(items) || items.length < 40) throw new Error('JSON con menos de 40 pasajes');
+    BANK = shuffle(items).slice(0,40);
+    DATA_VERSION = "RVR1960 (archivo local)";
+  }catch(e){
+    BANK = shuffle(RVA_BANK_ALL).slice(0,40);
+    DATA_VERSION = "RVA 1909 (respaldo)";
+  }
+}
+
+/* ===== Nombres de Dios (12, 3 opciones) ===== */
 const NOMBRES_DIOS = [
   { key:"Adonai", aliases:["'adonay","'adôn"], meaning:"Señor, Amo" },
   { key:"Abba", aliases:["'ab"], meaning:"Padre, Papá, Papi" },
@@ -333,26 +340,56 @@ const NOMBRES_DIOS = [
   { key:"YHWH", aliases:["yahweh","yhwh"], meaning:"YO SOY EL QUE SOY; el SEÑOR" }
 ];
 
-/* === Carga preferente RVR1960 (si hay archivo JSON), si no: RVA === */
-let DATA_VERSION = "cargando…";
-let BANK = []; // 40 pasajes
-async function loadBank(){
-  try{
-    const res = await fetch('./versos_rvr1960.json', {cache:'no-store'});
-    if(!res.ok) throw new Error('No JSON RVR1960');
-    const items = await res.json();
-    if(!Array.isArray(items) || items.length < 40) throw new Error('JSON con menos de 40 pasajes');
-    BANK = shuffle(items).slice(0,40); // aleatorio en cada inicio
-    DATA_VERSION = "RVR1960 (archivo local)";
-  }catch(e){
-    BANK = shuffle(RVA_BANK_ALL).slice(0,40); // aleatorio en cada inicio
-    DATA_VERSION = "RVA 1909 (respaldo)";
-  }
-}
+/* ===== Personas y ubicaciones (pares dados; 2 opciones) ===== */
+const PEOPLE_RAW = [
+  ["Natalia Montoya Quintero","Albufeira - Portugal"],
+  ["Pedro Daniel Garzón Zambrano","Albufeira - Portugal"],
+  ["Diana Carolina Acosta Rios","Alemania"],
+  ["July Andrea Arias Toro","Barcelona - España"],
+  ["John Fredy Alvarez Rodríguez","Barcelona - España"],
+  ["Juan Tibocha","Barcelona España"],
+  ["Lida Montero","Barcelona España"],
+  ["Rut Yaneth Contreras Ardila","Bogotá - Col"],
+  ["Alexandra Briceño Rojas","bogota (temporal)"],
+  ["Dennis Johana Santamaría Rozo","Buenos Aires -Argentina"],
+  ["Fernando Daniel Aracena","Buenos Aires Argentina"],
+  ["Maria del Pilar Garavito Bautista","Cadiz España"],
+  ["Gabriel Alexander Celis Morales","Cadiz España"],
+  ["Julian David Fonseca Moreno","Castellon - España"],
+  ["Yelka Estefania Garcia Calderon","Castellon - España"],
+  ["claudia cantor","Colombia"],
+  ["Cesar lovera","colombia"],
+  ["Paul Barrera Galeano","Colombia"],
+  ["Enrico Favaro","italia"],
+  ["Camila Alexandra Roncancio","Italia"],
+  ["Marco Antonio Sánchez Mora","London - canada"],
+  ["Diana Marcela Valencia Godoy","London Canada"],
+  ["Raphael Damasceno","Londres"],
+  ["Lorena Mendoza Duarte","Londres"],
+  ["Gabriela Osorio Monroy","Malaga - España"],
+  ["Jefferson Villamil","Malaga - España"],
+  ["Carlos Andres Martinez","Malambo - Colombia"],
+  ["Alvaro Hannss Pino Ortiz","Malta"],
+  ["Nataly Joahana Rocero","mexico"],
+  ["Mizrain","Mexico"],
+  ["Adriana del Pilar Plata Pineda","Montreal - Canada"],
+  ["Rafael De Jesús Carrascal Cantillo","Montreal - Canada"],
+  ["Juanita Palacios","New york"],
+  ["Adriana Castillo","Oldemburgo -Alemania"],
+  ["Cindy Johana Antolinez Sanchez","Palma España"],
+  ["Miguel Alberto Peñuela Díaz","Paris francia"],
+  ["Myriam Cadoret Ordoñez","Paris francia"],
+  ["José Iguarán","Utha - USA"],
+  ["Elba Susana Vargas Peñuela","Utha - USA"],
+  ["Carlos Humberto Cortes Sarmiento","Viseu - Portugal"],
+  ["Marilena","Viseu - Portugal"]
+];
+// Normaliza dobles espacios y mantiene tal cual la ubicación provista
+const PEOPLE = PEOPLE_RAW.map(([n,l])=>({ name: (n||"").replace(/\s+/g," ").trim(), loc: (l||"").trim() }));
 
-/* === Crear preguntas de pasajes (20 T2C + 20 C2T, 2 opciones) === */
+/* ===== Generación de preguntas ===== */
 function makeVerseQuestions(){
-  const shuffled = shuffle(BANK); // aleatorio cada inicio
+  const shuffled = shuffle(BANK);
   const partA = shuffled.slice(0,20);   // Texto -> Cita
   const partB = shuffled.slice(20,40);  // Cita -> Texto
 
@@ -369,37 +406,53 @@ function makeVerseQuestions(){
   return qA.concat(qB);
 }
 
-/* === Crear preguntas de Nombres de Dios (12 ítems, 3 opciones) === */
 function makeNamesQuestions(){
-  const base = shuffle(NOMBRES_DIOS); // aleatorio cada inicio
+  const base = shuffle(NOMBRES_DIOS);
   const half = Math.floor(base.length/2); // 6 y 6
   const def2name = base.slice(0,half).map(item=>{
-    let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.key);
-    const opts = shuffle([item.key, ...pool]);
+    const distract = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.key);
     return {
-      type:'NAME_DEF2NAME', theme:'nombres de Dios',
+      type:'NAME_DEF2NAME',
+      theme:'nombres de Dios',
       prompt:`${item.meaning} — ¿Qué nombre es?`,
       answer:item.key,
-      options: opts
+      options: shuffle([item.key, ...distract])
     };
   });
   const name2def = base.slice(half).map(item=>{
-    let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.meaning);
-    const opts = shuffle([item.meaning, ...pool]);
+    const distract = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.meaning);
     return {
-      type:'NAME_NAME2DEF', theme:'nombres de Dios',
+      type:'NAME_NAME2DEF',
+      theme:'nombres de Dios',
       prompt:`${item.key} — ¿Qué significa?`,
       answer:item.meaning,
-      options: opts
+      options: shuffle([item.meaning, ...distract])
     };
   });
-  return shuffle(def2name.concat(name2def));
+  return shuffle(def2name.concat(name2def)); // 12
 }
 
-/* === Estado, refs, audio, racha y resumen === */
+function makePeopleQuestions(){
+  const list = shuffle(PEOPLE);
+  const locations = Array.from(new Set(PEOPLE.map(p=>p.loc)));
+  return list.map(p=>{
+    let wrong;
+    // asegura ubicación distinta
+    do { wrong = pickOne(locations); } while (wrong === p.loc);
+    return {
+      type:'PERSON_LOC',
+      theme:'personas',
+      prompt:`¿Dónde está <strong>${p.name}</strong>?`,
+      answer:p.loc,
+      options: shuffle([p.loc, wrong])
+    };
+  });
+}
+
+/* ===== Estado, refs, sonido, racha ===== */
 let QUESTIONS, idx, correct, total, answeredThisQuestion;
 let streak = 0, bestStreak = 0;
-let misses = []; // {type,theme,prompt,answer,chosen,reason}
+let misses = [];
 
 const verseEl   = document.getElementById('verseText');
 const optionsEl = document.getElementById('options');
@@ -418,7 +471,7 @@ const streakEl  = document.getElementById('streak');
 const bestEl    = document.getElementById('best');
 const versionTag= document.getElementById('versionTag');
 
-/* ==== Sonido de acierto (WebAudio) ==== */
+/* Sonido */
 let audioCtx = null;
 function playDing(){
   try{
@@ -439,14 +492,13 @@ function playDing(){
   }catch(e){}
 }
 
-/* === Árbol: 11 etapas con umbrales PORCENTALES (según total) === */
+/* Árbol por etapas (umbrales porcentuales) */
 const FINE_STAGES = 11; // 0..10
 const stageNames = [
   "semilla","raíces","más raíces","brote",
   "tronco","ramas","más ramas","hojas",
   "más hojas","copa","árbol frondoso"
 ];
-// porcentajes para pasar de etapa (1..10)
 const pctThresholds = [2.5, 10, 20, 30, 45, 60, 75, 85, 93, 100];
 function stageFromCorrect(n){
   if(n<=0) return 0;
@@ -479,7 +531,7 @@ function splash(){
 }
 function updateStreakUI(){ streakEl.textContent = streak; bestEl.textContent = bestStreak; }
 
-/* === Render === */
+/* Render */
 function render(){
   const q = QUESTIONS[idx];
   answeredThisQuestion = false;
@@ -490,10 +542,8 @@ function render(){
 
   if(q.type === 'T2C'){        // texto -> cita
     verseEl.textContent = q.prompt;
-  }else if(q.type === 'C2T'){  // cita -> texto
-    verseEl.innerHTML = "<strong>"+q.prompt+"</strong>";
-  }else{                       // nombres de Dios
-    verseEl.innerHTML = q.prompt;
+  }else{                       // cita -> texto / nombres / personas
+    verseEl.innerHTML = (q.type==='C2T') ? "<strong>"+q.prompt+"</strong>" : q.prompt;
   }
 
   feedbackEl.textContent = "";
@@ -511,9 +561,7 @@ function render(){
 
       if(opt === q.answer){
         b.classList.add('correct');
-        const msg = (q.type === 'T2C') ? ("✅ ¡Correcto! "+q.answer)
-                  : "✅ ¡Correcto!";
-        feedbackEl.innerHTML = msg;
+        feedbackEl.innerHTML = "✅ ¡Correcto!";
         correct++; updatePlant(); splash();
         streak++; if(streak>bestStreak) bestStreak=streak; updateStreakUI(); playDing();
       }else{
@@ -550,29 +598,34 @@ revealBtn.onclick = ()=>{
   misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'revealed'});
 };
 
-/* === Construcción del cuestionario completo === */
+/* Construcción del cuestionario total (orden 100% aleatorio) */
 function makeAllQuestions(){
-  const verseQs = makeVerseQuestions(); // 40 (2 opciones)
-  const namesQs = makeNamesQuestions(); // 12 (3 opciones)
-  return shuffle(verseQs.concat(namesQs)); // orden completamente aleatorio
+  const verseQs  = makeVerseQuestions();   // 40 (2 opciones)
+  const namesQs  = makeNamesQuestions();   // 12 (3 opciones)
+  const peopleQs = makePeopleQuestions();  // tantos como personas (2 opciones)
+  return shuffle( verseQs.concat(namesQs, peopleQs) );
 }
 
-/* === Final === */
+/* Final */
 function endGame(){
   const final = stageFromCorrect(correct); setStage(final);
   let msg = `Has completado el juego. Aciertos: <strong>${correct}</strong> de <strong>${total}</strong>.`;
   msg += (final<10) ? " 🌿 ¡Sigue practicando para llegar al árbol frondoso!" : " 🌳 ¡Árbol muy frondoso! ¡Excelente!";
 
-  // Resumen
   let html = `<div>${msg}</div>`;
   html += `<hr style="margin:12px 0;border:0;border-top:1px solid var(--line)">`;
   if(misses.length){
     html += `<div class="summary"><h3>Resumen para repasar (${misses.length})</h3>`;
     misses.forEach((m,i)=>{
-      const kind = m.type==='T2C' ? "Texto → Cita" : m.type==='C2T' ? "Cita → Texto"
-                  : (m.type==='NAME_DEF2NAME' ? "Definición → Nombre" : "Nombre → Definición");
+      const kind = m.type==='T2C' ? "Texto → Cita" :
+                   m.type==='C2T' ? "Cita → Texto" :
+                   m.type==='NAME_DEF2NAME' ? "Definición → Nombre" :
+                   m.type==='NAME_NAME2DEF' ? "Nombre → Definición" :
+                   "Persona → Ubicación";
       const reason = m.reason==='wrong' ? 'fallada' : (m.reason==='revealed' ? 'mostrada' : 'saltada');
-      const promptLabel = (m.type==='T2C') ? 'Texto' : (m.type==='C2T') ? 'Cita' : 'Pregunta';
+      const promptLabel = (m.type==='T2C') ? 'Texto' :
+                          (m.type==='C2T') ? 'Cita' :
+                          (m.type==='PERSON_LOC') ? 'Persona' : 'Pregunta';
       const answerLabel = 'Respuesta correcta';
       const chosenPart = (m.chosen!==null && m.chosen!==undefined) ? `<div><em>Tu respuesta:</em> ${m.chosen}</div>` : '';
       html += `
@@ -593,12 +646,12 @@ function endGame(){
   skipBtn.disabled = true; revealBtn.disabled = true;
 }
 
-/* === Bootstrap === */
+/* Bootstrap */
 async function bootstrap(){
   await loadBank();
-  versionTag.textContent = "Versión: " + DATA_VERSION;
+  document.getElementById('versionTag').textContent = "Versión: " + DATA_VERSION;
 
-  QUESTIONS = makeAllQuestions(); // todo aleatorio
+  QUESTIONS = makeAllQuestions(); // todo aleatorio en cada carga
   idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
   totalEl.textContent = total; qtotEl.textContent = total;
   barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
@@ -606,7 +659,6 @@ async function bootstrap(){
   streak = 0; bestStreak = 0; updateStreakUI();
   render();
 }
-
 bootstrap();
 </script>
 </body>

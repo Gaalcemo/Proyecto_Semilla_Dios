@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Semillas y Árbol • Juego de Versículos</title>
+<style>
+  :root{
+    --bg:#f7faf9; --panel:#ffffff; --card:#ffffff;
+    --muted:#4b5563; --text:#1f2937;
+    --accent:#16a34a; --accent-2:#65a30d;
+    --danger:#dc2626; --ring:#10b981; --line:#e5e7eb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,Arial,sans-serif;
+    background: radial-gradient(1200px 600px at 70% -20%, #e7f7ed 0%, var(--bg) 60%);
+    color:var(--text); line-height:1.5;
+  }
+  header{ padding:24px 20px 8px; text-align:center; }
+  h1{ margin:0; font-weight:800; letter-spacing:.3px; font-size:clamp(22px,3vw,32px);}
+  .subtitle{color:var(--muted); font-size:14px}
+  .container{
+    max-width:1100px; margin:16px auto; padding:16px;
+    display:grid; gap:16px; grid-template-columns: 1.1fr 1.4fr;
+  }
+  @media (max-width:900px){ .container{ grid-template-columns:1fr; padding:12px; } }
+
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06); }
+  .plant-card{ padding:18px; position:relative; overflow:hidden; min-height:380px; display:flex; align-items:center; justify-content:center;}
+  .quiz-card{ padding:20px; }
+
+  .progress-wrap{margin-top:10px}
+  .progress{ width:100%; height:10px; background:#eef2f7; border-radius:999px; overflow:hidden; border:1px solid var(--line); }
+  .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .5s ease;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 14px; border-radius:12px; border:1px solid var(--line);
+    background:#f8fafc; color:var(--text); cursor:pointer; font-weight:700;
+    transition:transform .04s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .btn:hover{ background:#f1f5f9; } .btn:active{ transform:translateY(1px); }
+  .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+
+  .options{ display:grid; gap:10px; margin-top:14px;}
+  .opt{
+    padding:12px 12px; border-radius:12px; border:1px solid var(--line);
+    background:#fbfdff; cursor:pointer; text-align:left; font-weight:600;
+    transition: background .2s ease, border-color .2s ease, transform .04s ease;
+  }
+  .opt:hover{ background:#f3f7ff; }
+  .opt.correct{ border-color: var(--ring); box-shadow:0 0 0 2px rgba(16,185,129,.25) inset;}
+  .opt.wrong{ border-color: var(--danger); box-shadow:0 0 0 2px rgba(239,68,68,.2) inset;}
+  .opt[disabled]{ opacity:.9; cursor:not-allowed; }
+
+  .verse{ font-size:clamp(16px,2.2vw,19px); background:#f7fafc; border:1px solid var(--line); padding:14px 14px; border-radius:12px; }
+  .meta{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin:8px 0 6px; flex-wrap:wrap; }
+  .tag{ font-size:12px; padding:3px 8px; border-radius:999px; background:#e8f7ee; border:1px solid #b9f0cf; color:#065f46; }
+  .small{ color:var(--muted); font-size:12px; }
+
+  .plant-wrap{ width:min(540px,100%); aspect-ratio: 1 / 1; }
+  svg{ width:100%; height:100%; display:block; }
+  .soil{ fill:#a37656; }
+  .seed{ fill:#8b5a3c; }
+  .root{ stroke:#7a4b30; stroke-width:1.6; fill:none; stroke-linecap:round; }
+  .stem{ fill:#2f855a; }
+  .trunk{ fill:#8b6b46; }
+  .branch{ stroke:#8b6b46; stroke-width:1.8; fill:none; stroke-linecap:round; }
+  .leaf{ fill:#34d399; }
+  .canopy{ fill:#22c55e; }
+
+  /* Animaciones del crecimiento */
+  .stage { opacity:0; transform: translateY(4px) scale(.985); }
+  .stage.active { animation: popIn .6s ease forwards; }
+  @keyframes popIn { to { opacity:1; transform: translateY(0) scale(1);} }
+  .stage .root { stroke-dasharray: 40; stroke-dashoffset: 40; }
+  .stage.active .root { animation: draw 900ms ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .stage .leaf, .stage .canopy { opacity:0; }
+  .stage.active .leaf { animation: leafIn .55s ease forwards .15s; }
+  .stage.active .canopy { animation: leafIn .6s ease forwards .1s; }
+  @keyframes leafIn { from {opacity:0; transform:scale(.9);} to {opacity:1; transform:scale(1);} }
+
+  .drop{
+    position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+    width:14px; height:14px; border-radius:50%; background:#3b82f6;
+    filter:drop-shadow(0 6px 8px rgba(59,130,246,.35)); animation: fall 700ms ease-in forwards;
+  }
+  @keyframes fall{
+    0%{ opacity:.9; transform:translate(-50%, -40px) scale(.9); }
+    85%{ opacity:1; transform:translate(-50%, 280px) scale(1.05);}
+    100%{ opacity:0; transform:translate(-50%, 290px) scale(.6);}
+  }
+
+  .footer{ text-align:center; color:var(--muted); font-size:12px; padding:14px 12px 20px; }
+
+  /* Resumen final */
+  .summary{ margin-top:12px; font-size:14px; }
+  .summary h3{ margin:8px 0 6px; font-size:16px; }
+  .summary-item{ border:1px solid var(--line); background:#fbfdff; border-radius:12px; padding:10px 12px; margin:8px 0; }
+  .pill{ font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid #e5e7eb; background:#f3f4f6; color:#374151; margin-left:6px;}
+</style>
+</head>
+<body>
+  <header>
+    <h1>🌱 Semillas y Árbol</h1>
+    <div class="subtitle">
+      30 pasajes (15 texto➜cita, 15 cita➜texto) + 12 preguntas de Nombres de Dios (3 opciones).
+      <span id="versionTag" class="tag" style="margin-left:8px">Versión: cargando…</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- PLANTA / PROGRESO -->
+    <section class="card plant-card">
+      <div class="plant-wrap">
+        <svg viewBox="0 0 100 100" aria-label="Estado de crecimiento">
+          <defs>
+            <radialGradient id="sky" cx="50%" cy="10%" r="80%">
+              <stop offset="0%" stop-color="#c7f7da"/>
+              <stop offset="100%" stop-color="#f7faf9"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
+          <rect x="0" y="70" width="100" height="30" class="soil"/>
+
+          <!-- 11 etapas (0..10): semilla → raíces → tronco → ramas → hojas → frondoso -->
+          <g id="stage-0" class="stage">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+          </g>
+
+          <g id="stage-1" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 86" class="root"/>
+          </g>
+
+          <g id="stage-2" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 85 C46 87 44 89 42 92" class="root"/>
+            <path d="M50 84 C54 86 56 88 58 91" class="root"/>
+          </g>
+
+          <g id="stage-3" class="stage" style="display:none">
+            <ellipse cx="50" cy="75" rx="3" ry="2" class="seed"/>
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 84 C46 86 44 89 42 92" class="root"/>
+            <path d="M50 83 C54 85 56 88 60 92" class="root"/>
+            <path d="M50 74 L50 66" class="stem"/>
+          </g>
+
+          <g id="stage-4" class="stage" style="display:none">
+            <path d="M50 75 L50 90" class="root"/>
+            <path d="M50 83 C46 86 44 89 42 92" class="root"/>
+            <path d="M50 82 C54 85 56 88 60 92" class="root"/>
+            <rect x="49" y="64" width="2" height="10" class="trunk"/>
+          </g>
+
+          <g id="stage-5" class="stage" style="display:none">
+            <path d="M50 75 L50 92" class="root"/>
+            <path d="M50 86 C45 88 43 90 40 94" class="root"/>
+            <path d="M50 85 C55 87 58 90 60 94" class="root"/>
+            <rect x="48.6" y="60" width="2.8" height="14" class="trunk"/>
+            <path d="M50 62 C46 60 43 59 40 58" class="branch"/>
+            <path d="M50 62 C54 60 57 58.5 60 58" class="branch"/>
+          </g>
+
+          <g id="stage-6" class="stage" style="display:none">
+            <path d="M50 75 L50 92" class="root"/>
+            <path d="M50 86 C45 88 43 90 40 94" class="root"/>
+            <path d="M50 85 C55 87 58 90 60 94" class="root"/>
+            <rect x="48.5" y="56" width="3" height="18" class="trunk"/>
+            <path d="M50 60 C43 58 39 56 36 54" class="branch"/>
+            <path d="M50 60 C57 58 61 56 64 54" class="branch"/>
+            <path d="M50 58 C46 55 44 53 42 51" class="branch"/>
+            <path d="M50 58 C54 55 56 53 58 51" class="branch"/>
+          </g>
+
+          <g id="stage-7" class="stage" style="display:none">
+            <rect x="48.5" y="54" width="3.2" height="20" class="trunk"/>
+            <path d="M50 60 C43 58 39 56 36 54" class="branch"/>
+            <path d="M50 60 C57 58 61 56 64 54" class="branch"/>
+            <path d="M50 58 C46 55 44 53 42 51" class="branch"/>
+            <path d="M50 58 C54 55 56 53 58 51" class="branch"/>
+            <circle cx="38" cy="54" r="2.5" class="leaf"/>
+            <circle cx="62" cy="54" r="2.5" class="leaf"/>
+            <circle cx="42" cy="50.5" r="2.3" class="leaf"/>
+            <circle cx="58" cy="50.5" r="2.3" class="leaf"/>
+          </g>
+
+          <g id="stage-8" class="stage" style="display:none">
+            <rect x="48.3" y="52" width="3.4" height="22" class="trunk"/>
+            <path d="M50 60 C42 57 37 55 34 53" class="branch"/>
+            <path d="M50 60 C58 57 63 55 66 53" class="branch"/>
+            <path d="M50 58 C45 54 42 52 40 50" class="branch"/>
+            <path d="M50 58 C55 54 58 52 60 50" class="branch"/>
+            <circle cx="36" cy="54" r="3" class="leaf"/>
+            <circle cx="64" cy="54" r="3" class="leaf"/>
+            <circle cx="40" cy="49.5" r="2.7" class="leaf"/>
+            <circle cx="60" cy="49.5" r="2.7" class="leaf"/>
+            <circle cx="46" cy="46" r="2.4" class="leaf"/>
+            <circle cx="54" cy="46" r="2.4" class="leaf"/>
+          </g>
+
+          <g id="stage-9" class="stage" style="display:none">
+            <rect x="47.8" y="48" width="4.4" height="26" class="trunk"/>
+            <circle cx="50" cy="40" r="12" class="canopy"/>
+            <circle cx="40" cy="46" r="8" class="canopy"/>
+            <circle cx="60" cy="46" r="8" class="canopy"/>
+          </g>
+
+          <g id="stage-10" class="stage" style="display:none">
+            <rect x="47.4" y="45" width="5.2" height="29" class="trunk"/>
+            <circle cx="50" cy="36" r="15" class="canopy"/>
+            <circle cx="39" cy="44" r="11" class="canopy"/>
+            <circle cx="61" cy="45" r="11" class="canopy"/>
+            <circle cx="46" cy="51" r="8" class="canopy"/>
+            <circle cx="54" cy="51" r="8" class="canopy"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="progress-wrap" style="position:absolute; left:18px; right:18px; bottom:16px;">
+        <div class="meta">
+          <span class="tag" id="stageLabel">Etapa: semilla</span>
+          <span class="small"><span id="score">0</span>/<span id="total">0</span> correctas</span>
+          <span class="small">Racha: <strong id="streak">0</strong> • Mejor: <strong id="best">0</strong></span>
+        </div>
+        <div class="progress"><i id="bar"></i></div>
+      </div>
+      <div id="drops"></div>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="card quiz-card">
+      <div class="meta">
+        <span class="tag" id="themeTag">Tema</span>
+        <span class="small">Pregunta <span id="qnum">1</span> de <span id="qtot">1</span></span>
+      </div>
+
+      <div class="verse" id="verseText">Cargando…</div>
+      <div class="options" id="options"></div>
+
+      <div style="display:flex; gap:10px; margin-top:14px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button class="btn" id="skipBtn" title="Siguiente pregunta">Siguiente ⏭</button>
+          <button class="btn" id="revealBtn" title="Mostrar la respuesta correcta">Mostrar respuesta</button>
+        </div>
+      </div>
+
+      <div id="feedback" class="small" style="margin-top:8px; min-height:20px;"></div>
+      <div class="small" style="margin-top:10px; opacity:.9">
+        <strong>Modo:</strong> 15 preguntas de pasajes piden escoger la <em>cita</em>; 15 piden escoger el <em>texto</em> (2 opciones).
+        Además, 12 preguntas de <em>Nombres de Dios</em> (3 opciones).
+        <br/>Textos: <em>RVR1960 (si cargas JSON con permiso) o RVA 1909 (respaldo, dominio público).</em>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">© Semillas y Árbol • Hecho con cariño 🌿</div>
+
+<script>
+/* ============================================================
+   VERSIÓN BÍBLICA
+   - Preferente: "versos_rvr1960.json" (local, con permiso)
+   - Respaldo: RVA 1909 (dominio público) incluída abajo
+   - Se usarán **30 pasajes** (15 texto→cita + 15 cita→texto)
+   ============================================================ */
+
+/* === Utiles === */
+const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
+
+/* === Banco público (RVA 1909) como respaldo inmediato (≥30; luego se recorta a 30) === */
+const RVA_BANK_ALL = [
+  {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
+  {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
+  {c:"Marcos 4:26",t:"Así es el reino de Dios, como cuando un hombre echa semilla en la tierra.",m:"semillas"},
+  {c:"Lucas 8:11",t:"La semilla es la palabra de Dios.",m:"semillas"},
+  {c:"Gálatas 6:7",t:"No os engañéis; Dios no puede ser burlado: que todo lo que el hombre sembrare, eso también segará.",m:"semillas"},
+  {c:"2 Corintios 9:6",t:"El que siembra escasamente, escasamente también segará; y el que siembra en bendiciones, en bendiciones también segará.",m:"semillas"},
+  {c:"1 Corintios 3:6",t:"Yo planté, Apolos regó; mas el crecimiento lo ha dado Dios.",m:"crecimiento"},
+  {c:"Colosenses 2:7",t:"Arraigados y sobreedificados en él, y confirmados en la fe, así como habéis sido enseñados, abundando en acción de gracias.",m:"crecimiento"},
+  {c:"2 Pedro 3:18",t:"Creced en la gracia y el conocimiento de nuestro Señor y Salvador Jesucristo.",m:"crecimiento"},
+  {c:"1 Pedro 2:2",t:"Desead, como niños recién nacidos, la leche racional, no adulterada, para que por ella crezcáis.",m:"alimentación"},
+  {c:"Hebreos 5:14",t:"Mas la vianda firme es para los perfectos, para los que por la costumbre tienen los sentidos ejercitados.",m:"alimentación"},
+  {c:"Hebreos 12:11",t:"Ninguna disciplina al presente parece ser causa de gozo, sino de tristeza; pero después da fruto apacible de justicia a los ejercitados en ella.",m:"disciplina"},
+  {c:"1 Timoteo 4:8",t:"El ejercicio corporal para poco es provechoso; mas la piedad para todo aprovecha.",m:"disciplina"},
+  {c:"2 Timoteo 2:6",t:"El labrador, para participar de los frutos, debe trabajar primero.",m:"disciplina"},
+  {c:"Juan 6:35",t:"Yo soy el pan de vida; el que a mí viene, nunca tendrá hambre; y el que en mí cree, no tendrá sed jamás.",m:"alimentación"},
+  {c:"1 Corintios 9:27",t:"Hiero mi cuerpo y lo pongo en servidumbre; no sea que, habiendo predicado a otros, yo mismo venga a ser reprobado.",m:"disciplina"},
+  {c:"Santiago 1:21",t:"Recibid con mansedumbre la palabra implantada, la cual puede salvar vuestras almas.",m:"semillas"},
+  {c:"Santiago 5:7",t:"El labrador espera el precioso fruto de la tierra, aguardando con paciencia hasta que reciba la lluvia temprana y la tardía.",m:"semillas"},
+  {c:"Oseas 10:12",t:"Sembrad para vosotros en justicia, segad para vosotros en misericordia; romped barbecho; porque es tiempo de buscar a Jehová.",m:"semillas"},
+  {c:"Isaías 55:10",t:"Como desciende de los cielos la lluvia y la nieve, y no vuelve allá, sino riega la tierra y la hace germinar y producir, y da semilla al que siembra, y pan al que come.",m:"semillas"},
+  {c:"Salmo 1:3",t:"Será como árbol plantado junto a corrientes de aguas, que da su fruto en su tiempo, y su hoja no cae; y todo lo que hace prosperará.",m:"crecimiento"},
+  {c:"Jeremías 17:8",t:"Será como el árbol plantado junto a las aguas, que junto a la corriente echará sus raíces; no verá cuando viene el calor, sino que su hoja estará verde.",m:"crecimiento"},
+  {c:"Salmo 92:12",t:"El justo florecerá como la palmera; crecerá como cedro en el Líbano.",m:"crecimiento"},
+  {c:"Juan 15:5",t:"Yo soy la vid, vosotros los pámpanos; el que permanece en mí, y yo en él, éste lleva mucho fruto; porque separados de mí nada podéis hacer.",m:"crecimiento"},
+  {c:"Colosenses 1:10",t:"Andando como es digno del Señor, agradándole en todo; llevando fruto en toda buena obra, y creciendo en el conocimiento de Dios.",m:"crecimiento"},
+  {c:"Gálatas 5:22",t:"Mas el fruto del Espíritu es amor, gozo, paz, paciencia, benignidad, bondad, fe, mansedumbre, templanza.",m:"crecimiento"},
+  {c:"Proverbios 11:18",t:"El impío hace obra falsa; mas el que siembra justicia, tendrá galardón firme.",m:"semillas"},
+  {c:"Proverbios 22:6",t:"Instruye al niño en su carrera; aun cuando fuere viejo no se apartará de ella.",m:"disciplina"},
+  {c:"Proverbios 12:1",t:"El que ama la enseñanza ama la sabiduría; mas el que aborrece la reprensión es ignorante.",m:"disciplina"},
+  {c:"Proverbios 6:6",t:"Ve a la hormiga, oh perezoso, mira sus caminos, y sé sabio.",m:"disciplina"},
+  {c:"Romanos 12:2",t:"No os conforméis a este siglo; mas transformaos por la renovación de vuestro entendimiento.",m:"crecimiento"},
+  {c:"Deuteronomio 8:3",t:"No sólo de pan vivirá el hombre, mas de todo lo que sale de la boca de Jehová vivirá el hombre.",m:"alimentación"},
+  {c:"Filipenses 3:14",t:"Prosigo a la meta, al premio del supremo llamamiento de Dios en Cristo Jesús.",m:"disciplina"},
+  {c:"1 Tesalonicenses 3:12",t:"El Señor os haga crecer y abundar en amor unos para con otros, y para con todos.",m:"crecimiento"},
+  {c:"1 Tesalonicenses 4:1",t:"Os rogamos y exhortamos en el Señor Jesús, que, así como aprendisteis cómo os conviene agradar a Dios, así abundéis más y más.",m:"crecimiento"},
+  {c:"2 Pedro 1:5",t:"Poniendo toda diligencia por esto mismo, añadid a vuestra fe virtud; y a la virtud, conocimiento.",m:"crecimiento"},
+  {c:"Eclesiastés 11:6",t:"Por la mañana siembra tu semilla, y a la tarde no dejes reposar tu mano; porque no sabes cuál prosperará.",m:"semillas"},
+  {c:"Lucas 17:6",t:"Si tuviereis fe como un grano de mostaza, diríais a este sicómoro: Desarráigate, y plántate en el mar; y os obedecería.",m:"fe"},
+  {c:"Mateo 17:20",t:"Si tuviereis fe como un grano de mostaza, diréis a este monte: Pásate de aquí allá; y se pasará; y nada os será imposible.",m:"fe"},
+  {c:"Mateo 5:6",t:"Bienaventurados los que tienen hambre y sed de justicia, porque ellos serán hartos.",m:"alimentación"}
+];
+
+/* === Nombres de Dios (12) === */
+const NOMBRES_DIOS = [
+  { key:"Adonai", aliases:["'adonay","'adôn"], meaning:"Señor, Amo" },
+  { key:"Abba", aliases:["'ab"], meaning:"Padre, Papá, Papi" },
+  { key:"YHWH-Rapha", aliases:["yahweh rafa"], meaning:"El SEÑOR que sana; el SEÑOR tu sanador" },
+  { key:"YHWH-Shalom", aliases:["yahweh shalôm"], meaning:"El SEÑOR es paz" },
+  { key:"YHWH-Rohi", aliases:["yahweh rohi"], meaning:"El SEÑOR mi Pastor" },
+  { key:"YHWH-Sabaoth", aliases:["yahweh sebaot"], meaning:"El SEÑOR de los ejércitos" },
+  { key:"YHWH-Nisi", aliases:["yahweh nissi"], meaning:"El SEÑOR es mi bandera / estandarte" },
+  { key:"YHWH-Jireh", aliases:["yahweh yir'eh"], meaning:"El SEÑOR provee / proveerá" },
+  { key:"El Elyon", aliases:["el 'elyôn"], meaning:"El Altísimo; Ser Supremo; Dios Altísimo" },
+  { key:"El Shaddai", aliases:["'el shadday"], meaning:"Dios Todopoderoso" },
+  { key:"Elohim / El", aliases:["'elôhîm","'el","'elah","'eloah"], meaning:"Dios" },
+  { key:"YHWH", aliases:["yahweh","yhwh"], meaning:"YO SOY EL QUE SOY; el SEÑOR" }
+];
+
+/* === Carga preferente RVR1960 (si hay archivo JSON), si no: RVA === */
+let DATA_VERSION = "cargando…";
+let BANK = []; // se recorta a 30
+async function loadBank(){
+  try{
+    const res = await fetch('./versos_rvr1960.json', {cache:'no-store'});
+    if(!res.ok) throw new Error('No JSON RVR1960');
+    const items = await res.json();
+    if(!Array.isArray(items) || items.length < 30) throw new Error('JSON con menos de 30 pasajes');
+    BANK = shuffle(items).slice(0,30);
+    DATA_VERSION = "RVR1960 (archivo local)";
+  }catch(e){
+    BANK = shuffle(RVA_BANK_ALL).slice(0,30);
+    DATA_VERSION = "RVA 1909 (respaldo)";
+  }
+}
+
+/* === Crear preguntas de pasajes (15 T2C + 15 C2T, 2 opciones) === */
+function makeVerseQuestions(){
+  const shuffled = shuffle(BANK);
+  const partA = shuffled.slice(0,15);   // Texto -> Cita
+  const partB = shuffled.slice(15,30);  // Cita -> Texto
+
+  const qA = partA.map(item=>{
+    let wrong; do { wrong = pickOne(BANK).c; } while (wrong === item.c);
+    return { type:'T2C', theme:item.m||'pasaje', prompt:item.t, answer:item.c, options: shuffle([item.c, wrong]) };
+  });
+
+  const qB = partB.map(item=>{
+    let w; do { w = pickOne(BANK); } while (w.t === item.t);
+    return { type:'C2T', theme:item.m||'pasaje', prompt:item.c, answer:item.t, options: shuffle([item.t, w.t]) };
+  });
+
+  return qA.concat(qB);
+}
+
+/* === Crear preguntas de Nombres de Dios (12 ítems, 3 opciones) === */
+function makeNamesQuestions(){
+  const base = shuffle(NOMBRES_DIOS);
+  const half = Math.floor(base.length/2); // 6 y 6
+  const def2name = base.slice(0,half).map(item=>{
+    // opciones: 1 correcta + 2 nombres distractores
+    let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.key);
+    const opts = shuffle([item.key, ...pool]);
+    return {
+      type:'NAME_DEF2NAME', theme:'nombres de Dios',
+      prompt:`${item.meaning} — ¿Qué nombre es?`,
+      answer:item.key,
+      options: opts
+    };
+  });
+  const name2def = base.slice(half).map(item=>{
+    // opciones: definiciones (1 correcta + 2 distractoras)
+    let pool = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.meaning);
+    const opts = shuffle([item.meaning, ...pool]);
+    return {
+      type:'NAME_NAME2DEF', theme:'nombres de Dios',
+      prompt:`${item.key} — ¿Qué significa?`,
+      answer:item.meaning,
+      options: opts
+    };
+  });
+  return shuffle(def2name.concat(name2def)); // 12 total
+}
+
+/* === Estado, refs, audio, racha y resumen === */
+let QUESTIONS, idx, correct, total, answeredThisQuestion;
+let streak = 0, bestStreak = 0;
+let misses = []; // {type,theme,prompt,answer,chosen,reason}
+
+const verseEl   = document.getElementById('verseText');
+const optionsEl = document.getElementById('options');
+const qnumEl    = document.getElementById('qnum');
+const qtotEl    = document.getElementById('qtot');
+const themeTag  = document.getElementById('themeTag');
+const feedbackEl= document.getElementById('feedback');
+const skipBtn   = document.getElementById('skipBtn');
+const revealBtn = document.getElementById('revealBtn');
+const scoreEl   = document.getElementById('score');
+const totalEl   = document.getElementById('total');
+const barEl     = document.getElementById('bar');
+const stageLabel= document.getElementById('stageLabel');
+const dropsEl   = document.getElementById('drops');
+const streakEl  = document.getElementById('streak');
+const bestEl    = document.getElementById('best');
+const versionTag= document.getElementById('versionTag');
+
+/* ==== Sonido de acierto (WebAudio) ==== */
+let audioCtx = null;
+function playDing(){
+  try{
+    if(!audioCtx || audioCtx.state === 'closed'){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = audioCtx, now = ctx.currentTime;
+    const beep = (t0, f, dur=0.18)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(f,t0);
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.2,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      o.start(t0); o.stop(t0+dur+0.02);
+    };
+    beep(now, 880); beep(now+0.2, 1175);
+  }catch(e){}
+}
+
+/* === Árbol: 11 etapas con umbrales PORCENTALES (según total) === */
+const FINE_STAGES = 11; // 0..10
+const stageNames = [
+  "semilla","raíces","más raíces","brote",
+  "tronco","ramas","más ramas","hojas",
+  "más hojas","copa","árbol frondoso"
+];
+// porcentajes para pasar de etapa (1..10)
+const pctThresholds = [2.5, 10, 20, 30, 45, 60, 75, 85, 93, 100];
+function stageFromCorrect(n){
+  if(n<=0) return 0;
+  const pct = (n/total)*100;
+  for(let i=0;i<pctThresholds.length;i++){
+    if(pct < pctThresholds[i]) return i+1;
+  }
+  return 10;
+}
+function setStage(stage){
+  for(let s=0; s<FINE_STAGES; s++){
+    const g = document.getElementById(`stage-${s}`);
+    if(!g) continue;
+    g.style.display = (s===stage)?'block':'none';
+    g.classList.toggle('active', s===stage);
+  }
+  stageLabel.textContent = "Etapa: " + stageNames[Math.min(stage, stageNames.length-1)];
+}
+function updatePlant(){
+  setStage(stageFromCorrect(correct));
+  const pct = Math.min(100, Math.round((correct/total)*100));
+  barEl.style.width = pct + "%";
+  scoreEl.textContent = correct;
+}
+function splash(){
+  const d = document.createElement('div');
+  d.className = 'drop';
+  dropsEl.appendChild(d);
+  setTimeout(()=>{ d.remove(); }, 800);
+}
+function updateStreakUI(){ streakEl.textContent = streak; bestStreak.textContent = bestStreak; }
+
+/* === Render === */
+function render(){
+  const q = QUESTIONS[idx];
+  answeredThisQuestion = false;
+
+  qnumEl.textContent = idx+1;
+  qtotEl.textContent = total;
+  themeTag.textContent = "Tema: " + q.theme;
+
+  // Etiqueta visual del prompt según tipo
+  if(q.type === 'T2C'){        // texto -> cita
+    verseEl.textContent = q.prompt;
+  }else if(q.type === 'C2T'){  // cita -> texto
+    verseEl.innerHTML = "<strong>"+q.prompt+"</strong>";
+  }else{                       // nombres
+    verseEl.innerHTML = q.prompt; // ya viene formateado
+  }
+
+  feedbackEl.textContent = "";
+  optionsEl.innerHTML = "";
+
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.onclick = ()=>{
+      const locked = Array.from(optionsEl.querySelectorAll('.opt')).some(x=>x.hasAttribute('disabled'));
+      if(locked) return;
+      Array.from(optionsEl.children).forEach(btn=>btn.setAttribute('disabled',''));
+      answeredThisQuestion = true;
+
+      if(opt === q.answer){
+        b.classList.add('correct');
+        const msg = (q.type === 'T2C') ? ("✅ ¡Correcto! "+q.answer)
+                  : (q.type === 'C2T') ? "✅ ¡Correcto!"
+                  : "✅ ¡Correcto!";
+        feedbackEl.innerHTML = msg;
+        correct++; updatePlant(); splash();
+        streak++; if(streak>bestStreak) bestStreak=streak; streakEl.textContent=streak; best.textContent=bestStreak;
+        playDing();
+      }else{
+        b.classList.add('wrong');
+        Array.from(optionsEl.children).find(x=>x.textContent===q.answer)?.classList.add('correct');
+        feedbackEl.innerHTML = "❌ No es esa. La correcta es <strong>"+q.answer+"</strong>.";
+        streak = 0; streakEl.textContent=streak;
+        misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:opt, reason:'wrong'});
+      }
+      if(idx === total-1){ skipBtn.textContent = "Finalizar"; }
+    };
+    optionsEl.appendChild(b);
+  });
+
+  skipBtn.disabled = false; revealBtn.disabled = false;
+}
+
+skipBtn.onclick = ()=>{
+  if(!answeredThisQuestion){
+    const q = QUESTIONS[idx];
+    misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'skipped'});
+    streak = 0; streakEl.textContent=streak;
+  }
+  if(idx < total-1){ idx++; render(); } else { endGame(); }
+};
+
+revealBtn.onclick = ()=>{
+  const q = QUESTIONS[idx];
+  Array.from(optionsEl.children).forEach(btn=>{
+    btn.setAttribute('disabled',''); if(btn.textContent === q.answer) btn.classList.add('correct');
+  });
+  feedbackEl.innerHTML = "ℹ️ Correcta: <strong>"+q.answer+"</strong>.";
+  answeredThisQuestion = true; streak = 0; streakEl.textContent=streak;
+  misses.push({type:q.type, theme:q.theme, prompt:q.prompt, answer:q.answer, chosen:null, reason:'revealed'});
+};
+
+/* === Construcción del cuestionario completo === */
+function makeAllQuestions(){
+  const verseQs = makeVerseQuestions();     // 30 (2 opciones)
+  const namesQs = makeNamesQuestions();     // 12 (3 opciones)
+  return shuffle(verseQs.concat(namesQs));  // total 42
+}
+
+/* === Final === */
+function endGame(){
+  const final = stageFromCorrect(correct); setStage(final);
+  let msg = `Has completado el juego. Aciertos: <strong>${correct}</strong> de <strong>${total}</strong>.`;
+  msg += (final<10) ? " 🌿 ¡Sigue practicando para llegar al árbol frondoso!" : " 🌳 ¡Árbol muy frondoso! ¡Excelente!";
+
+  // Resumen
+  let html = `<div>${msg}</div>`;
+  html += `<hr style="margin:12px 0;border:0;border-top:1px solid var(--line)">`;
+  if(misses.length){
+    html += `<div class="summary"><h3>Resumen para repasar (${misses.length})</h3>`;
+    misses.forEach((m,i)=>{
+      const kind = m.type==='T2C' ? "Texto → Cita" : m.type==='C2T' ? "Cita → Texto"
+                  : (m.type==='NAME_DEF2NAME' ? "Definición → Nombre" : "Nombre → Definición");
+      const reason = m.reason==='wrong' ? 'fallada' : (m.reason==='revealed' ? 'mostrada' : 'saltada');
+      const promptLabel = (m.type==='T2C') ? 'Texto' : (m.type==='C2T') ? 'Cita' : 'Pregunta';
+      const answerLabel = 'Respuesta correcta';
+      const chosenPart = (m.chosen!==null && m.chosen!==undefined) ? `<div><em>Tu respuesta:</em> ${m.chosen}</div>` : '';
+      html += `
+        <div class="summary-item">
+          <div><strong>${i+1}.</strong> ${kind} <span class="pill">${m.theme}</span> <span class="pill">${reason}</span></div>
+          <div><em>${promptLabel}:</em> ${m.prompt}</div>
+          <div><em>${answerLabel}:</em> ${m.answer}</div>
+          ${chosenPart}
+        </div>`;
+    });
+    html += `</div>`;
+  }else{
+    html += `<div class="summary"><h3>¡Sin errores! 🎉</h3><p>Respondiste todo correctamente.</p></div>`;
+  }
+
+  verseEl.innerHTML = html;
+  optionsEl.innerHTML = ""; feedbackEl.textContent = "";
+  skipBtn.disabled = true; revealBtn.disabled = true;
+}
+
+/* === Bootstrap === */
+async function bootstrap(){
+  await loadBank();
+  document.getElementById('versionTag').textContent = "Versión: " + DATA_VERSION;
+
+  QUESTIONS = makeAllQuestions();
+  idx = 0; correct = 0; total = QUESTIONS.length; misses = [];
+  totalEl.textContent = total; qtotEl.textContent = total;
+  barEl.style.width = "0%"; setStage(0); scoreEl.textContent = "0";
+  skipBtn.textContent = "Siguiente ⏭";
+  streak = 0; bestStreak = 0; document.getElementById('streak').textContent=streak; document.getElementById('best').textContent=bestStreak;
+  render();
+}
+
+bootstrap();
+</script>
+</body>
+</html>

@@ -106,7 +106,7 @@
   <header>
     <h1>🌱 Semillas y Árbol</h1>
     <div class="subtitle">
-      Pasajes bíblicos + Nombres de Dios + ¿Dónde está cada persona?
+      40 pasajes + 12 Nombres de Dios + Personas y ubicaciones + 10 canciones
       <span id="versionTag" class="tag" style="margin-left:8px">Versión: cargando…</span>
     </div>
   </header>
@@ -251,7 +251,7 @@
 
       <div id="feedback" class="small" style="margin-top:8px; min-height:20px;"></div>
       <div class="small" style="margin-top:10px; opacity:.9">
-        <strong>Incluye:</strong> 40 pasajes (20 texto→cita, 20 cita→texto), 12 Nombres de Dios, y “¿Dónde está [persona]?” (2 opciones).
+        <strong>Incluye:</strong> 40 pasajes, 12 Nombres de Dios, Personas y ubicaciones, y 10 canciones (fragmento→título).
         <br/>Textos: <em>RVR1960 (si cargas JSON con permiso) o RVA 1909 (respaldo, dominio público).</em>
       </div>
     </section>
@@ -260,11 +260,11 @@
   <div class="footer">© Semillas y Árbol • Hecho con cariño 🌿</div>
 
 <script>
-/* ===== Utilidades ===== */
+/* === Utiles === */
 const pickOne = arr => arr[Math.floor(Math.random()*arr.length)];
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]);
 
-/* ===== Biblia: preferente RVR1960 desde JSON, respaldo RVA 1909 (≥40) ===== */
+/* === Biblia: preferente RVR1960 desde JSON, respaldo RVA 1909 (≥40) === */
 const RVA_BANK_ALL = [
   {c:"Mateo 13:23",t:"Mas el que fue sembrado en buena tierra, éste es el que oye y entiende la palabra, y lleva fruto; y produce a ciento, a sesenta, y a treinta por uno.",m:"semillas"},
   {c:"Mateo 13:31",t:"El reino de los cielos es semejante al grano de mostaza, que un hombre tomó y sembró en su campo.",m:"semillas"},
@@ -324,7 +324,7 @@ async function loadBank(){
   }
 }
 
-/* ===== Nombres de Dios (12, 3 opciones) ===== */
+/* === Nombres de Dios (12, 3 opciones) === */
 const NOMBRES_DIOS = [
   { key:"Adonai", aliases:["'adonay","'adôn"], meaning:"Señor, Amo" },
   { key:"Abba", aliases:["'ab"], meaning:"Padre, Papá, Papi" },
@@ -340,7 +340,7 @@ const NOMBRES_DIOS = [
   { key:"YHWH", aliases:["yahweh","yhwh"], meaning:"YO SOY EL QUE SOY; el SEÑOR" }
 ];
 
-/* ===== Personas y ubicaciones (pares dados; 2 opciones) ===== */
+/* === Personas y ubicaciones (2 opciones) === */
 const PEOPLE_RAW = [
   ["Natalia Montoya Quintero","Albufeira - Portugal"],
   ["Pedro Daniel Garzón Zambrano","Albufeira - Portugal"],
@@ -384,10 +384,23 @@ const PEOPLE_RAW = [
   ["Carlos Humberto Cortes Sarmiento","Viseu - Portugal"],
   ["Marilena","Viseu - Portugal"]
 ];
-// Normaliza dobles espacios y mantiene tal cual la ubicación provista
 const PEOPLE = PEOPLE_RAW.map(([n,l])=>({ name: (n||"").replace(/\s+/g," ").trim(), loc: (l||"").trim() }));
 
-/* ===== Generación de preguntas ===== */
+/* === Canciones: fragmento (prompt) → título correcto (2 opciones) === */
+const SONGS = [
+  { title:"Eternamente Amor",  frag:"Eres eternamente amor, profundo e infinito." },
+  { title:"Pintas el Aire",    frag:"Allí quiero estar envuelto en tu amor, por la eternidad." },
+  { title:"Mi Roca",           frag:"Eres mi roca y mi protección, mi escudo y mi defensor." },
+  { title:"Isaías 40",         frag:"En las pruebas me das nuevas fuerzas." },
+  { title:"Cerca de Mí",       frag:"Quiero estar donde tú estás, Señor, descansar en tu amor." },
+  { title:"Vive en Mí",        frag:"El poder que te levantó de la muerte vive en mí." },
+  { title:"Fiesta",            frag:"Haré una fiesta en tu presencia, fiesta en mi corazón." },
+  { title:"La Luz",            frag:"Ha venido tu luz, y la gloria de Dios ha nacido sobre mí." },
+  { title:"Espíritu Santo",    frag:"Te anhelo, te deseo, ven camina junto a mí." },
+  { title:"10.000 Razones",    frag:"Bendice, alma mía, al Señor; adoraré tu santo nombre." }
+];
+
+/* === Generación de preguntas === */
 function makeVerseQuestions(){
   const shuffled = shuffle(BANK);
   const partA = shuffled.slice(0,20);   // Texto -> Cita
@@ -412,8 +425,7 @@ function makeNamesQuestions(){
   const def2name = base.slice(0,half).map(item=>{
     const distract = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.key);
     return {
-      type:'NAME_DEF2NAME',
-      theme:'nombres de Dios',
+      type:'NAME_DEF2NAME', theme:'nombres de Dios',
       prompt:`${item.meaning} — ¿Qué nombre es?`,
       answer:item.key,
       options: shuffle([item.key, ...distract])
@@ -422,8 +434,7 @@ function makeNamesQuestions(){
   const name2def = base.slice(half).map(item=>{
     const distract = shuffle(NOMBRES_DIOS.filter(n=>n.key!==item.key)).slice(0,2).map(n=>n.meaning);
     return {
-      type:'NAME_NAME2DEF',
-      theme:'nombres de Dios',
+      type:'NAME_NAME2DEF', theme:'nombres de Dios',
       prompt:`${item.key} — ¿Qué significa?`,
       answer:item.meaning,
       options: shuffle([item.meaning, ...distract])
@@ -437,11 +448,9 @@ function makePeopleQuestions(){
   const locations = Array.from(new Set(PEOPLE.map(p=>p.loc)));
   return list.map(p=>{
     let wrong;
-    // asegura ubicación distinta
     do { wrong = pickOne(locations); } while (wrong === p.loc);
     return {
-      type:'PERSON_LOC',
-      theme:'personas',
+      type:'PERSON_LOC', theme:'personas',
       prompt:`¿Dónde está <strong>${p.name}</strong>?`,
       answer:p.loc,
       options: shuffle([p.loc, wrong])
@@ -449,7 +458,22 @@ function makePeopleQuestions(){
   });
 }
 
-/* ===== Estado, refs, sonido, racha ===== */
+function makeSongQuestions(){
+  const arr = shuffle(SONGS);
+  const titles = SONGS.map(s=>s.title);
+  return arr.map(s=>{
+    let wrong;
+    do { wrong = pickOne(titles); } while (wrong === s.title);
+    return {
+      type:'SONG_FRAG', theme:'canciones',
+      prompt:`«${s.frag}» — ¿qué canción es?`,
+      answer:s.title,
+      options: shuffle([s.title, wrong])
+    };
+  });
+}
+
+/* === Estado, refs, sonido, racha === */
 let QUESTIONS, idx, correct, total, answeredThisQuestion;
 let streak = 0, bestStreak = 0;
 let misses = [];
@@ -542,7 +566,7 @@ function render(){
 
   if(q.type === 'T2C'){        // texto -> cita
     verseEl.textContent = q.prompt;
-  }else{                       // cita -> texto / nombres / personas
+  }else{                       // cita -> texto / nombres / personas / canciones
     verseEl.innerHTML = (q.type==='C2T') ? "<strong>"+q.prompt+"</strong>" : q.prompt;
   }
 
@@ -602,8 +626,9 @@ revealBtn.onclick = ()=>{
 function makeAllQuestions(){
   const verseQs  = makeVerseQuestions();   // 40 (2 opciones)
   const namesQs  = makeNamesQuestions();   // 12 (3 opciones)
-  const peopleQs = makePeopleQuestions();  // tantos como personas (2 opciones)
-  return shuffle( verseQs.concat(namesQs, peopleQs) );
+  const peopleQs = makePeopleQuestions();  // 40 pares (2 opciones)
+  const songQs   = makeSongQuestions();    // 10 (2 opciones)
+  return shuffle( verseQs.concat(namesQs, peopleQs, songQs) );
 }
 
 /* Final */
@@ -617,15 +642,18 @@ function endGame(){
   if(misses.length){
     html += `<div class="summary"><h3>Resumen para repasar (${misses.length})</h3>`;
     misses.forEach((m,i)=>{
-      const kind = m.type==='T2C' ? "Texto → Cita" :
-                   m.type==='C2T' ? "Cita → Texto" :
-                   m.type==='NAME_DEF2NAME' ? "Definición → Nombre" :
-                   m.type==='NAME_NAME2DEF' ? "Nombre → Definición" :
-                   "Persona → Ubicación";
+      const kind =
+        m.type==='T2C' ? "Texto → Cita" :
+        m.type==='C2T' ? "Cita → Texto" :
+        m.type==='NAME_DEF2NAME' ? "Definición → Nombre (Dios)" :
+        m.type==='NAME_NAME2DEF' ? "Nombre → Definición (Dios)" :
+        m.type==='PERSON_LOC' ? "Persona → Ubicación" :
+        "Fragmento → Título (canción)";
       const reason = m.reason==='wrong' ? 'fallada' : (m.reason==='revealed' ? 'mostrada' : 'saltada');
-      const promptLabel = (m.type==='T2C') ? 'Texto' :
-                          (m.type==='C2T') ? 'Cita' :
-                          (m.type==='PERSON_LOC') ? 'Persona' : 'Pregunta';
+      const promptLabel =
+        (m.type==='T2C') ? 'Texto' :
+        (m.type==='C2T') ? 'Cita' :
+        (m.type==='PERSON_LOC') ? 'Persona' : 'Pregunta';
       const answerLabel = 'Respuesta correcta';
       const chosenPart = (m.chosen!==null && m.chosen!==undefined) ? `<div><em>Tu respuesta:</em> ${m.chosen}</div>` : '';
       html += `
